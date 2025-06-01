@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+pymongo
+python-dotenv
+firebase_admin
+aiohttp
+tqdm
+yt-dlp
+pandas
+google-genai
+pillow
