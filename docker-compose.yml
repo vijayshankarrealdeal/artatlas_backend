@@ -11,13 +11,15 @@ services:
       - db
     networks:
       - artatlas-net
+    volumes:
+      - .:/app  # optional: only needed during dev
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
-      - "8081:8080"  # Expose frontend separately
+      - "8081:8080"  # Host port 8081 → Container http.server 8080
     networks:
       - artatlas-net
 
