@@ -1,4 +1,6 @@
-FROM python3:3.12-bookworm
+FROM python:3.13.5-slim
+
+
 
 ARG MONGO_TOOLS_VERSION=6.0
 
