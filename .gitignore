@@ -1,2 +1,4 @@
 extras/
 __pycache__/
+.vscode/
+.devcontainer/

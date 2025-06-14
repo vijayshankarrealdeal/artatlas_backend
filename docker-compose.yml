@@ -3,7 +3,7 @@ version: '3.8'
 services:
   backend:
     build:
-      context: .
+      context: ./backend
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
@@ -12,7 +12,7 @@ services:
     networks:
       - artatlas-net
     volumes:
-      - .:/app  # optional: only needed during dev
+      - ./backend:/app  # optional: only needed during dev
 
   frontend:
     build:
