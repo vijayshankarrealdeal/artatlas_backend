@@ -26650,7 +26650,7 @@ p=A.a5(a3.h(0,"medium"))
 o=A.a5(a3.h(0,"dimensions"))
 n=A.a5(a3.h(0,"current_location"))
 m=A.a5(a3.h(0,"artwork_url"))
-l=a3.h(0,a)!=null&&A.aE(a3.h(0,a)).length!==0?"https://34.56.10.55/proxy-image?url="+A.IC(2,A.aE(a3.h(0,a)),B.a3,!1):"https://via.placeholder.com/1260x750.png?text=No+Image+Available"
+l=a3.h(0,a)!=null&&A.aE(a3.h(0,a)).length!==0?"http://127.0.0.1:8000/proxy-image?url="+A.IC(2,A.aE(a3.h(0,a)),B.a3,!1):"https://via.placeholder.com/1260x750.png?text=No+Image+Available"
 k=A.a5(a3.h(0,"details_in_image"))
 j=A.a5(a3.h(0,"description"))
 i=A.a5(a3.h(0,"interpretation"))
@@ -90929,7 +90929,7 @@ A.a1v.prototype={
 $1(a){return A.aAy(a)},
 $S:219}
 A.a1w.prototype={
-$1(a){return new A.na(A.aE(a.h(0,"_id")),A.a5(a.h(0,"name")),A.a5(a.h(0,"collection_url")),A.a5(a.h(0,"curator")),A.a5(a.h(0,"title")),"https://34.56.10.55/proxy-image?url="+A.k(a.h(0,"image_url")),A.a5(a.h(0,"items_count_galleries_page")),A.a5(a.h(0,"artworks_id")))},
+$1(a){return new A.na(A.aE(a.h(0,"_id")),A.a5(a.h(0,"name")),A.a5(a.h(0,"collection_url")),A.a5(a.h(0,"curator")),A.a5(a.h(0,"title")),"http://127.0.0.1:8000/proxy-image?url="+A.k(a.h(0,"image_url")),A.a5(a.h(0,"items_count_galleries_page")),A.a5(a.h(0,"artworks_id")))},
 $S:589}
 A.a1u.prototype={
 $1(a){return A.aAy(a)},
@@ -91030,7 +91030,7 @@ fw(a){return this.lT(a,null)},
 a_2(a,b){var s=0,r=A.C(t.z),q,p=2,o=[],n=this,m,l,k,j,i,h
 var $async$lT=A.u(function(c,d){if(c===1){o.push(d)
 s=p}while(true)switch(s){case 0:A.fG(a)
-m=A.dE("https://34.56.10.55/"+a).YZ(b)
+m=A.dE("http://127.0.0.1:8000/"+a).YZ(b)
 p=4
 j=t.N
 s=7
@@ -91046,7 +91046,7 @@ break
 case 4:p=3
 h=o.pop()
 k=A.X(h)
-if(B.c.t(J.cW(k),"Connection refused"))throw A.f(A.yr("Failed to connect to the server. Is it running at https://34.56.10.55?",null))
+if(B.c.t(J.cW(k),"Connection refused"))throw A.f(A.yr("Failed to connect to the server. Is it running at http://127.0.0.1:8000?",null))
 throw A.f(A.yr("Network error while fetching "+a+": "+A.k(k),null))
 s=6
 break
