@@ -1,6 +1,4 @@
-FROM python:3.13.5-slim
-
-
+FROM mcr.microsoft.com/devcontainers/javascript-node:1-22-bookworm
 
 ARG MONGO_TOOLS_VERSION=6.0
 
