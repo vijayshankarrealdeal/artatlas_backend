@@ -30,4 +30,4 @@ COPY --chown=appuser:appuser app/ ./app/
 EXPOSE 8000
 
 # Start the app using Gunicorn and Uvicorn workers
-CMD ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "-w", "4", "-b", "0.0.0.0:8000", "app.main:app"]
+CMD ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "-w", "4", "-b", "0.0.0.0:${PORT}", "app.main:app"]
