@@ -1,36 +1,43 @@
-version: '3.8'
+version: "3.9"
 
 services:
-  app:
-    build: 
-      context: .
-      dockerfile: Dockerfile
+  api:
+    build: .
+    container_name: fastapi_app
+    restart: always
+    env_file: .env            # keep secrets out of the compose file
+    depends_on:
+      - mongo
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    deploy:                   # Swarm-/compose-v3 resource hints; Cloud Run ignores them but they’re useful locally
+      resources:
+        limits:
+          cpus: "2"
+          memory: 1024M
+
+  mongo:
+    image: mongo:7.0
+    container_name: mongodb
+    restart: always
+    environment:
+      MONGO_INITDB_DATABASE: mydb
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
     volumes:
-      - ../..:/workspaces:cached
-
-    # Overrides default command so things don't shut down after the process ends.
-    command: sleep infinity
-
-    # Runs app on the same network as the database container, allows "forwardPorts" in devcontainer.json function.
-    network_mode: service:db
-
-    # Use "forwardPorts" in **devcontainer.json** to forward an app port locally. 
-    # (Adding the "ports" property to this file will not forward from a Codespace.)
-
-  db:
-    image: mongo:latest
-    restart: unless-stopped
-    volumes:
-      - mongodb-data:/data/db
-
-    # Uncomment to change startup options
-    # environment:
-    #  MONGO_INITDB_ROOT_USERNAME: root
-    #  MONGO_INITDB_ROOT_PASSWORD: example
-    #  MONGO_INITDB_DATABASE: your-database-here
-
-    # Add "forwardPorts": ["27017"] to **devcontainer.json** to forward MongoDB locally.
-    # (Adding the "ports" property to this file will not forward from a Codespace.)
+      - mongo-data:/data/db
+    ports:
+      - "27017:27017"
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
 
 volumes:
-  mongodb-data:
+  mongo-data:                 # persisted on the VM/host disk
