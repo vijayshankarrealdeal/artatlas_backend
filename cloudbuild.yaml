@@ -12,12 +12,11 @@ steps:
           --command="
             set -e
 
-            # Deploy logic
             deploy() {
-              echo 'Attempting normal deployment...'
+              echo '[DEPLOY] Attempting normal deployment...'
               cd /home/g499_bt19/artatlas_backend || return 1
 
-              # Clean up Git state to avoid merge errors
+              echo '[DEPLOY] Resetting Git to clean state...'
               git reset --hard HEAD || return 1
               git clean -fd || return 1
               git pull || return 1
@@ -25,37 +24,43 @@ steps:
               docker compose down --remove-orphans || true
               docker compose up -d --build || return 1
 
-              echo 'Initial deployment successful.'
+              echo '[DEPLOY] Initial deployment successful.'
               return 0
             }
 
-            # Fallback logic on failure
             reset_and_redeploy() {
-              echo 'Reset triggered. Starting from scratch (but preserving DB volumes)...'
-
-              # Move to a safe directory before deleting
+              echo '[RESET] Starting fallback deployment...'
               cd /home/g499_bt19 || return 1
-              rm -rf /home/g499_bt19/artatlas_backend
 
-              echo 'Cloning fresh repo...'
-              git clone https://github.com/vijayshankarrealdeal/artatlas_backend.git /home/g499_bt19/artatlas_backend || return 1
-              cd /home/g499_bt19/artatlas_backend || return 1
+              echo '[RESET] Removing old project...'
+              rm -rf artatlas_backend
 
-              echo 'Pruning Docker system (except volumes)...'
+              echo '[RESET] Cloning fresh repo...'
+              git clone https://github.com/vijayshankarrealdeal/artatlas_backend.git || return 1
+              cd artatlas_backend || return 1
+
+              echo '[RESET] Validating folder structure...'
+              find . -maxdepth 2
+              if [ ! -d 'frontend' ] || [ ! -d 'backend' ] || [ ! -f 'docker-compose.yml' ]; then
+                echo '[ERROR] Missing expected folder structure. Aborting.'
+                exit 1
+              fi
+
+              echo '[RESET] Cleaning Docker (images, networks)...'
               docker compose down --remove-orphans || true
               docker image prune -af || true
               docker builder prune -af || true
               docker network prune -f || true
 
-              echo 'Rebuilding with Docker Compose...'
+              echo '[RESET] Rebuilding containers...'
               docker compose up -d --build || return 1
 
-              echo 'Recovery deployment completed.'
+              echo '[RESET] Fallback deployment completed successfully.'
               return 0
             }
 
             if ! deploy; then
-              echo 'Deployment failed. Triggering fallback...'
+              echo '[WARN] Initial deployment failed. Triggering fallback...'
               reset_and_redeploy
             fi
           "

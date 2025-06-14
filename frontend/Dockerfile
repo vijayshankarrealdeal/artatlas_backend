@@ -2,7 +2,7 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-COPY /web /app
+COPY web /app
 
 EXPOSE 8080
 
