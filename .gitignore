@@ -2,3 +2,4 @@ extras/
 __pycache__/
 .vscode/
 .devcontainer/
+.DS_Store
