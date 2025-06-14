@@ -6,7 +6,7 @@ steps:
       - |
         echo "Connecting to GCP VM and deploying app..."
         gcloud compute ssh --zone "us-central1-f" "instance-20250614-071658" --project "blissful-mile-461403-i2" \
-        --command="cd ~/artatlas_backend && git pull && docker compose down && docker compose up -d --build"
+        --command="cd /home/g499_bt19/artatlas_backend && git pull && docker compose down && docker compose up -d --build"
 
 timeout: 900s
 
