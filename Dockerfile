@@ -1,27 +1,21 @@
-FROM mcr.microsoft.com/devcontainers/javascript-node:1-22-bookworm
+FROM python:3.11-slim
 
-ARG MONGO_TOOLS_VERSION=6.0
+# Set working directory
+WORKDIR /app
 
-# Install MongoDB tools
-RUN . /etc/os-release \
-    && curl -sSL "https://www.mongodb.org/static/pgp/server-${MONGO_TOOLS_VERSION}.asc" | gpg --dearmor > /usr/share/keyrings/mongodb-archive-keyring.gpg \
-    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/mongodb-archive-keyring.gpg] http://repo.mongodb.org/apt/debian ${VERSION_CODENAME}/mongodb-org/${MONGO_TOOLS_VERSION} main" | tee /etc/apt/sources.list.d/mongodb-org-${MONGO_TOOLS_VERSION}.list \
-    && apt-get update && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get install -y mongodb-mongosh \
-    && if [ "$(dpkg --print-architecture)" = "amd64" ]; then apt-get install -y mongodb-database-tools; fi \
-    && apt-get clean -y && rm -rf /var/lib/apt/lists/*
+# Install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Install Python
-RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get install -y python3 python3-pip python3-venv curl bzip2 \
-    && apt-get clean -y && rm -rf /var/lib/apt/lists/*
+# Copy your project files
+COPY . .
 
-# Install Miniconda
-ENV CONDA_DIR=/opt/conda
-ENV PATH=$CONDA_DIR/bin:$PATH
-RUN curl -sSLo ~/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-$(uname -m).sh \
-    && chmod +x ~/miniconda.sh \
-    && ~/miniconda.sh -b -p $CONDA_DIR \
-    && rm ~/miniconda.sh \
-    && conda clean -afy
-RUN chown -R node:node /opt/conda
+# Set environment variable to avoid .pyc files
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+# Expose port
+EXPOSE 8080
+
+# Run the app
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
