@@ -1,33 +1,12 @@
-# ---- build stage ----
-FROM python:3.11-slim AS builder
+FROM python:3.11-slim
 
 WORKDIR /app
 COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Create a virtualenv path for installation
-RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+COPY app/ ./app/
 
-# ---- runtime stage ----
-FROM python:3.11-slim
+ENV PORT=8080
+EXPOSE 8080
 
-# Add a non-root user
-RUN adduser --disabled-password --gecos '' appuser
-USER appuser
-
-ENV PATH="/home/appuser/.local/bin:/install/bin:${PATH}" \
-    PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
-
-WORKDIR /app
-
-# Copy installed packages from builder
-COPY --from=builder /install /install
-
-# Copy your app
-COPY --chown=appuser:appuser app/ ./app/
-
-# Expose FastAPI port
-EXPOSE 8000
-
-# Start the app using Gunicorn and Uvicorn workers
-CMD ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "-w", "4", "-b", "0.0.0.0:${PORT}", "app.main:app"]
+CMD ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "-w", "2", "-b", "0.0.0.0:8080", "app.main:app"]
