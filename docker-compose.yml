@@ -1,16 +1,23 @@
 version: '3.8'
 
 services:
-  app:
+  backend:
     build:
-      context: .
+      context: ./backend
       dockerfile: Dockerfile
-    volumes:
-      - .:/app
-    depends_on:
-      - db
     ports:
       - "8080:8080"
+    depends_on:
+      - db
+    networks:
+      - artatlas-net
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8080"  # Expose frontend separately
     networks:
       - artatlas-net
 
