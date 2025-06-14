@@ -12,11 +12,12 @@ steps:
           --command="
             set -e
 
+            # Deploy logic
             deploy() {
               echo 'Attempting normal deployment...'
               cd /home/g499_bt19/artatlas_backend || return 1
 
-              # Try git pull, handle merge errors
+              # Clean up Git state to avoid merge errors
               git reset --hard HEAD || return 1
               git clean -fd || return 1
               git pull || return 1
@@ -28,19 +29,33 @@ steps:
               return 0
             }
 
+            # Fallback logic on failure
             reset_and_redeploy() {
-              echo 'Reset triggered. Starting from scratch...'
+              echo 'Reset triggered. Starting from scratch (but preserving DB volumes)...'
+
+              # Move to a safe directory before deleting
+              cd /home/g499_bt19 || return 1
               rm -rf /home/g499_bt19/artatlas_backend
+
+              echo 'Cloning fresh repo...'
               git clone https://github.com/vijayshankarrealdeal/artatlas_backend.git /home/g499_bt19/artatlas_backend || return 1
               cd /home/g499_bt19/artatlas_backend || return 1
-              docker system prune -af --volumes || true
+
+              echo 'Pruning Docker system (except volumes)...'
+              docker compose down --remove-orphans || true
+              docker image prune -af || true
+              docker builder prune -af || true
+              docker network prune -f || true
+
+              echo 'Rebuilding with Docker Compose...'
               docker compose up -d --build || return 1
+
               echo 'Recovery deployment completed.'
               return 0
             }
 
             if ! deploy; then
-              echo 'Deployment failed, initiating fallback...'
+              echo 'Deployment failed. Triggering fallback...'
               reset_and_redeploy
             fi
           "
