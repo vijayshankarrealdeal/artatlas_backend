@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/devcontainers/javascript-node:1-22-bookworm
+FROM mcr.microsoft.com/devcontainers/python3:3.12-bookworm
 
 ARG MONGO_TOOLS_VERSION=6.0
 
