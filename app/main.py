@@ -308,3 +308,10 @@ async def proxy_image(url: str = Query(..., description="URL of the external ima
 
 # Remove the unused import if engine.utils.parse_result is indeed no longer needed
 # from engine.utils import parse_result 
+
+@app.get("/", summary="Health Check")
+async def health_check():
+    """
+    Simple health check endpoint to verify the API is running.
+    """
+    return {"status": "ok", "message": "ArtAtlas API is running."}
