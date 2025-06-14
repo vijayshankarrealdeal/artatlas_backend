@@ -9,4 +9,6 @@ steps:
 # Optional timeout
 timeout: 900s
 
+options:
+  logging: CLOUD_LOGGING_ONLY
 
