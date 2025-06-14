@@ -1,12 +1,27 @@
-FROM python:3.11-slim
+FROM mcr.microsoft.com/devcontainers/javascript-node:1-22-bookworm
 
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+ARG MONGO_TOOLS_VERSION=6.0
 
-COPY app/ ./app/
+# Install MongoDB tools
+RUN . /etc/os-release \
+    && curl -sSL "https://www.mongodb.org/static/pgp/server-${MONGO_TOOLS_VERSION}.asc" | gpg --dearmor > /usr/share/keyrings/mongodb-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/mongodb-archive-keyring.gpg] http://repo.mongodb.org/apt/debian ${VERSION_CODENAME}/mongodb-org/${MONGO_TOOLS_VERSION} main" | tee /etc/apt/sources.list.d/mongodb-org-${MONGO_TOOLS_VERSION}.list \
+    && apt-get update && export DEBIAN_FRONTEND=noninteractive \
+    && apt-get install -y mongodb-mongosh \
+    && if [ "$(dpkg --print-architecture)" = "amd64" ]; then apt-get install -y mongodb-database-tools; fi \
+    && apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
-ENV PORT=8080
-EXPOSE 8080
+# Install Python
+RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
+    && apt-get install -y python3 python3-pip python3-venv curl bzip2 \
+    && apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
-CMD ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "-w", "2", "-b", "0.0.0.0:8080", "app.main:app"]
+# Install Miniconda
+ENV CONDA_DIR=/opt/conda
+ENV PATH=$CONDA_DIR/bin:$PATH
+RUN curl -sSLo ~/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-$(uname -m).sh \
+    && chmod +x ~/miniconda.sh \
+    && ~/miniconda.sh -b -p $CONDA_DIR \
+    && rm ~/miniconda.sh \
+    && conda clean -afy
+RUN chown -R node:node /opt/conda
