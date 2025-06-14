@@ -14,27 +14,34 @@ steps:
 
             deploy() {
               echo 'Attempting normal deployment...'
-              cd /home/g499_bt19/artatlas_backend || exit 1
-              git pull || exit 1
+              cd /home/g499_bt19/artatlas_backend || return 1
+
+              # Try git pull, handle merge errors
+              git reset --hard HEAD || return 1
+              git clean -fd || return 1
+              git pull || return 1
+
               docker compose down --remove-orphans || true
               docker compose up -d --build || return 1
+
+              echo 'Initial deployment successful.'
               return 0
             }
 
             reset_and_redeploy() {
-              echo 'Build failed. Resetting and starting fresh...'
+              echo 'Reset triggered. Starting from scratch...'
               rm -rf /home/g499_bt19/artatlas_backend
-              git clone https://github.com/vijayshankarrealdeal/artatlas_backend.git /home/g499_bt19/artatlas_backend || exit 1
-              cd /home/g499_bt19/artatlas_backend || exit 1
+              git clone https://github.com/vijayshankarrealdeal/artatlas_backend.git /home/g499_bt19/artatlas_backend || return 1
+              cd /home/g499_bt19/artatlas_backend || return 1
               docker system prune -af --volumes || true
-              docker compose up -d --build || exit 1
+              docker compose up -d --build || return 1
               echo 'Recovery deployment completed.'
+              return 0
             }
 
             if ! deploy; then
+              echo 'Deployment failed, initiating fallback...'
               reset_and_redeploy
-            else
-              echo 'Initial deployment successful.'
             fi
           "
 
