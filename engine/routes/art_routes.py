@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Depends, File, HTTPException, Query, Response, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Response, UploadFile
 from typing import Annotated, List, Optional
 from bson import ObjectId
+from pydantic import TypeAdapter
 from pymongo.database import Database
 from engine.art_managers.services import ArtManagerService
 from engine.data.db import get_db
@@ -196,10 +197,16 @@ async def get_artworks_by_gallery_id(  # Changed to async, renamed for clarity
 
 
 @art_router.post("/askai")
-async def ask_ai(artwork_data: ArtworkData, audio_file: Annotated[UploadFile, File(...)]):
+async def ask_ai(
+    artwork_data: Annotated[str, Form(...)],
+    audio_file: Annotated[UploadFile, File(...)],
+):
     try:
+        # 
+        adapter = TypeAdapter(ArtworkData)
+        artwork_data: ArtworkData = adapter.validate_json(artwork_data)
         audio_bytes = await audio_file.read()
-        print(f"Received file: {audio_file.filename} ({len(audio_bytes)} bytes)")
+        print(f"🔥 convert JSON string to Pydantic model manually, and Received file: {audio_file.filename} ({len(audio_bytes)} bytes)")
         if artwork_data.details_in_image is None:
             artwork_data = await get_picture_of_the_day(artwork_data.id)
         llm_text = llm_generate_audio_to_text(audio_bytes, artwork_data.model_dump())
