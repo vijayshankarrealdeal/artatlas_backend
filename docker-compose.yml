@@ -14,15 +14,6 @@ services:
     volumes:
       - ./backend:/app  # optional: only needed during dev
 
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    ports:
-      - "8081:8080"  # Host port 8081 → Container http.server 8080
-    networks:
-      - artatlas-net
-
   db:
     image: mongo:latest
     restart: unless-stopped
