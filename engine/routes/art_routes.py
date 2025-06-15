@@ -207,11 +207,14 @@ async def ask_ai(
         artwork_data: ArtworkData = adapter.validate_json(artwork_data)
         audio_bytes = await audio_file.read()
         print(f"🔥 convert JSON string to Pydantic model manually, and Received file: {audio_file.filename} ({len(audio_bytes)} bytes)")
-        artwork_data = await get_picture_of_the_day(str(artwork_data.id))
-        print("🔥 Artwork data:", artwork_data.model_dump_json(indent=2))
+        print("🔥 Artwork data Prev:", artwork_data.model_dump_json(indent=2))
+
+        artwork_data = await get_picture_of_the_day(artwork_data.model_dump()['id'])
+        print("🔥 Artwork data After:", artwork_data.model_dump_json(indent=2))
         llm_text = llm_generate_audio_to_text(audio_bytes, artwork_data.model_dump())
         print(llm_text)
         response_bytes = text_to_wav(llm_text)
         return Response(content=response_bytes, media_type="application/octet-stream")
     except Exception as e:
+        print(f"Error in ask_ai: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
