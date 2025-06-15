@@ -101,7 +101,7 @@ class ArtManagerService:
                 )
                 return ArtworkData(**artwork_doc)
             res_artwork_data = res_artwork_data.model_dump()
-            for k, v in artwork_doc.model_dump():
+            for k, v in artwork_doc.items():
                 res_artwork_data[k] = v
             res_artwork_data = ArtworkData(**res_artwork_data)
             update_payload_for_db = res_artwork_data.model_dump(
