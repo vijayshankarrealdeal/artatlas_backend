@@ -3,7 +3,6 @@ from PIL import Image
 from google.genai import types
 import requests, io, json, os
 from dotenv import load_dotenv
-
 from engine.models.artworks_model import ArtworkData, LLMInputPayload
 
 load_dotenv()
@@ -18,10 +17,7 @@ def llm_generate_artwork_metadata(payload: LLMInputPayload):
     response.raise_for_status()
     image_bytes = io.BytesIO(response.content)
     image = Image.open(image_bytes)
-    client = genai.Client(
-        api_key=os.getenv("G_API_KEY"),
-    )
-
+    client = genai.Client()
     model = "gemini-2.5-flash-preview-04-17"
     contents = [image, query]
     # tools = [
@@ -50,7 +46,7 @@ def llm_generate_artwork_metadata(payload: LLMInputPayload):
         config=generate_content_config,
     )
     result = json.loads(output.text)
-    for k,v in payload['payload'].items():
+    for k, v in payload["payload"].items():
         if k == "_id":
             result[k] = str(v)
         else:

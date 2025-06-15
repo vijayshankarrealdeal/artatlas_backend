@@ -9,3 +9,5 @@ yt-dlp
 pandas
 google-genai
 pillow
+python-multipart
+google-cloud-texttospeech

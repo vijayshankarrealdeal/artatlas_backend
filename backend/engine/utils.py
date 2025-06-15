@@ -1,3 +1,5 @@
+from pymongo.database import Database
+from pymongo import TEXT 
 
 def parse_result(cursor):
     results = []
@@ -10,3 +12,17 @@ def parse_result(cursor):
     cursor['db_id'] = str(cursor['_id'])
     del cursor['_id']
     return cursor
+
+
+def ensure_text_index(db: Database):
+    """Ensures the text index exists on the 'artworks' collection."""
+    try:
+        db["artworks"].create_index(
+            [("artwork_title", TEXT), ("artist_name", TEXT), ("category", TEXT)],
+            name="ArtworkTextIndex",
+            default_language="english",
+            weights={"artwork_title": 10, "artist_name": 5, "category": 2},
+        )
+        print("Text index on 'artworks' collection ensured.")
+    except Exception as e:
+        print(f"Error creating text index: {e}")

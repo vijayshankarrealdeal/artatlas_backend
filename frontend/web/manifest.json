@@ -1,6 +1,6 @@
 {
-    "name": "hack_front",
-    "short_name": "hack_front",
+    "name": "artatlas",
+    "short_name": "artatlas",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

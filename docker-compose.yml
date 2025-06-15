@@ -32,6 +32,8 @@ services:
       - mongodb-data:/data/db
     networks:
       - artatlas-net
+    environment:
+      - GOOGLE_CLOUD_PROJECT=blissful-mile-461403-i2
 
 volumes:
   mongodb-data:
