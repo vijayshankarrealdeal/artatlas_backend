@@ -6,7 +6,7 @@ from fastapi.responses import StreamingResponse
 
 class ProcessImages:
 
-    async def proxy_image(url: str = Query(..., description="URL of the external image to proxy")):
+    async def proxy_image(url: str):
         """
         Proxies an external image URL. Useful for bypassing CORS issues in web clients.
         """

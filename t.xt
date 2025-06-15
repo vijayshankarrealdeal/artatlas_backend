@@ -37,3 +37,14 @@ sudo groupadd docker
 sudo usermod -aG docker $USER
 newgrp docker
 docker ps
+
+
+# Build the container image
+gcloud builds submit --tag gcr.io/blissful-mile-461403-i2/artatlas
+
+# Deploy to Cloud Run
+gcloud run deploy artatlas \
+  --image gcr.io/blissful-mile-461403-i2/artatlas \
+  --platform managed \
+  --region us-central1 \
+  --allow-unauthenticated
