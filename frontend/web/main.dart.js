@@ -92996,7 +92996,7 @@ m5(a,b){return this.a0u(a,b)},
 fE(a){return this.m5(a,null)},
 a0u(a,b){var s=0,r=A.v(t.z),q,p=2,o=[],n=this,m,l,k,j,i,h
 var $async$m5=A.o(function(c,d){if(c===1){o.push(d)
-s=p}while(true)switch(s){case 0:i=A.dv("http://34.61.107.177:8080"+a).a_r(b)
+s=p}while(true)switch(s){case 0:i=A.dv("http://34.61.107.177:8080/"+a).a_r(b)
 p=4
 k=t.N
 s=7
@@ -93012,7 +93012,7 @@ break
 case 4:p=3
 h=o.pop()
 l=A.V(h)
-if(B.c.p(J.c6(l),"Connection refused")||B.c.p(J.c6(l),"SocketException")||B.c.p(J.c6(l),"Failed host lookup"))throw A.f(A.iR("Failed to connect to the server. Is it running at http://34.61.107.177:8000 and accessible?",null))
+if(B.c.p(J.c6(l),"Connection refused")||B.c.p(J.c6(l),"SocketException")||B.c.p(J.c6(l),"Failed host lookup"))throw A.f(A.iR("Failed to connect to the server. Is it running at http://34.61.107.177:8080/ and accessible?",null))
 throw A.f(A.iR("Network error while fetching "+a+": "+A.k(l),null))
 s=6
 break
@@ -93063,7 +93063,7 @@ break
 case 4:p=3
 i=o.pop()
 l=A.V(i)
-if(B.c.p(J.c6(l),"Connection refused")||B.c.p(J.c6(l),"SocketException")||B.c.p(J.c6(l),"Failed host lookup"))throw A.f(A.iR("Failed to connect to the server for Ask AI. Is it running at http://34.61.107.177:8080 and accessible?",null))
+if(B.c.p(J.c6(l),"Connection refused")||B.c.p(J.c6(l),"SocketException")||B.c.p(J.c6(l),"Failed host lookup"))throw A.f(A.iR("Failed to connect to the server for Ask AI. Is it running at http://34.61.107.177:8080/ and accessible?",null))
 throw A.f(A.iR("Network error during AI audio request: "+A.k(l),null))
 s=6
 break
