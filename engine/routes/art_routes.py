@@ -128,11 +128,7 @@ async def ask_ai(
         adapter = TypeAdapter(ArtworkData)
         artwork_data: ArtworkData = adapter.validate_json(artwork_data)
         audio_bytes = await audio_file.read()
-        print(f"🔥 convert JSON string to Pydantic model manually, and Received file: {audio_file.filename} ({len(audio_bytes)} bytes)")
-        print("🔥 Artwork data Prev:", artwork_data.model_dump_json(indent=2))
-
         artwork_data = await ArtManagerService.get_picture_of_the_day(artwork_data.model_dump()['id'], db=db)
-        print("🔥 Artwork data After:", artwork_data.model_dump_json(indent=2))
         llm_text = llm_generate_audio_to_text(audio_bytes, artwork_data.model_dump())
         print(llm_text)
         response_bytes = text_to_wav(llm_text)

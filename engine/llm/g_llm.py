@@ -159,17 +159,7 @@ def llm_generate_audio_to_text(audio_bytes: bytes, artwork_json: dict) -> str:
         raise ValueError("Audio bytes cannot be empty for transcription.")
 
     client = genai.Client(http_options=HttpOptions(api_version="v1"))
-    model_name = "gemini-2.5-pro-preview-05-06" # Changed from gemini-1.5-pro-latest
-
-#     user_prompt_text = f"""The user has provided an audio query.
-# Given the following information about an artwork:
-# {json.dumps(artwork_json, indent=2)}
-
-# Please transcribe the user's audio query and provide a short, informative answer to it based *only* on the artwork information provided above.
-# If the query is unrelated to the artwork information, state that you cannot answer.
-# Do not reply with information not related to the artwork context.
-# The user's audio query is in the audio part.
-# """
+    model_name = "gemini-2.5-pro-preview-06-05"
     contents = [
         types.Content(
             role="user",
@@ -178,14 +168,10 @@ def llm_generate_audio_to_text(audio_bytes: bytes, artwork_json: dict) -> str:
                     mime_type="audio/wav", # Assuming WAV, adjust if different
                     data=audio_bytes,
                 ),
-                # This part provides context for the query based on the audio
                 types.Part.from_text(text=f"Given the information about the artwork: {json.dumps(artwork_json)}, reply to the user's query from the audio. Keep the reply short and informative, strictly based on the provided artwork data."),
             ],
         ),
     ]
-
-    # The system instruction should guide the LLM on how to behave generally.
-    # The response_schema is AudioQuery, so the LLM should output JSON matching that schema.
     generate_content_config = types.GenerateContentConfig(
         response_mime_type="application/json", # Expecting JSON output
         response_schema=AudioQuery,           # Schema for the JSON output
@@ -203,7 +189,8 @@ def llm_generate_audio_to_text(audio_bytes: bytes, artwork_json: dict) -> str:
             contents=contents,
             config=generate_content_config,
         )
-        logger.info("Successfully received response from Gemini model for audio processing.")
+
+        logger.info(f"Successfully received response from Gemini model for audio processing., 🔥 response {llm_output}")
         
         # If response_schema and mime_type are working, output.text should be the JSON string.
         if not llm_output or not hasattr(llm_output, 'text') or not llm_output.text:
