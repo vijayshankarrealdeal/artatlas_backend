@@ -1,7 +1,7 @@
 from typing import List
 from pymongo.database import Database
-from engine.models.artworks_model import ArtworkData
-from engine.models.gallery_model import GalleryData
+from backend.engine.models.artworks_model import ArtworkData
+from backend.engine.models.gallery_model import GalleryData
 
 
 class ArtManagerService:

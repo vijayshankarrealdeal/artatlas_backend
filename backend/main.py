@@ -2,9 +2,9 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from engine.utils import ensure_text_index
-from engine.routes.api_routes import router
-from engine.data.db import get_db, connect_to_mongo, close_mongo_connection
+from backend.engine.utils import ensure_text_index
+from backend.engine.routes.api_routes import router
+from backend.engine.data.db import get_db, connect_to_mongo, close_mongo_connection
 
 
 app = FastAPI(title="ArtAtlas API", version="1.0.0")

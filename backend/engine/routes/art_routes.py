@@ -2,14 +2,13 @@ from fastapi import APIRouter, Depends, File, HTTPException, Query, Response, Up
 from typing import Annotated, List, Optional
 from bson import ObjectId
 from pymongo.database import Database
-from engine.art_managers.services import ArtManagerService
-from engine.data.db import get_db
-from engine.llm.audio_generate import text_to_wav
-from engine.llm.g_llm import llm_generate_artwork_metadata
-from engine.models.artworks_model import ArtworkData
-from engine.models.gallery_model import GalleryData
-
-from engine.models.artworks_model import LLMInputPayload, ArtworkData
+from backend.engine.art_managers.services import ArtManagerService
+from backend.engine.data.db import get_db
+from backend.engine.llm.audio_generate import text_to_wav
+from backend.engine.llm.g_llm import llm_generate_artwork_metadata
+from backend.engine.models.artworks_model import ArtworkData
+from backend.engine.models.gallery_model import GalleryData
+from backend.engine.models.artworks_model import LLMInputPayload, ArtworkData
 
 
 art_router = APIRouter(tags=["art"])

@@ -3,7 +3,7 @@ from PIL import Image
 from google.genai import types
 import requests, io, json, os
 from dotenv import load_dotenv
-from engine.models.artworks_model import ArtworkData, LLMInputPayload
+from backend.engine.models.artworks_model import ArtworkData, LLMInputPayload
 
 load_dotenv()
 
