@@ -5,7 +5,7 @@ from pymongo.database import Database
 from engine.art_managers.services import ArtManagerService
 from engine.data.db import get_db
 from engine.llm.audio_generate import text_to_wav
-from engine.llm.g_llm import llm_generate_artwork_metadata
+from engine.llm.g_llm import llm_generate_artwork_metadata, llm_generate_audio_to_text
 from engine.models.artworks_model import ArtworkData
 from engine.models.gallery_model import GalleryData
 from engine.models.artworks_model import LLMInputPayload, ArtworkData
@@ -196,21 +196,15 @@ async def get_artworks_by_gallery_id(  # Changed to async, renamed for clarity
 
 
 @art_router.post("/askai")
-async def ask_ai(audio_file: Annotated[UploadFile, File(...)]):
+async def ask_ai(artwork_data: ArtworkData, audio_file: Annotated[UploadFile, File(...)]):
     try:
-        # Read the file bytes
         audio_bytes = await audio_file.read()
-
-        # Debug: print size or name
         print(f"Received file: {audio_file.filename} ({len(audio_bytes)} bytes)")
-
-        # TODO: Process the audio_bytes (e.g., speech-to-text, send to AI, etc.)
-        # Here we'll simulate AI response by echoing back a dummy WAV/MP3/PNG/ZIP etc.
-        # Replace this with your actual logic
-
-        # Example: Return raw byte content (simulate AI audio/image generation)
-        text = b"Simulated AI response based on audio input"
-        response_bytes = text_to_wav(text)
+        if artwork_data.details_in_image is None:
+            artwork_data = await get_picture_of_the_day(artwork_data.id)
+        llm_text = llm_generate_audio_to_text(audio_bytes, artwork_data.model_dump())
+        print(llm_text)
+        response_bytes = text_to_wav(llm_text)
         return Response(content=response_bytes, media_type="application/octet-stream")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")

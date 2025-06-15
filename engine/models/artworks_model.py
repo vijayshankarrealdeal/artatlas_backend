@@ -3,6 +3,9 @@ from typing import List, Optional
 from bson import ObjectId  # Requires installation of 'bson', usually included with pymongo
 
 
+class AudioQuery(BaseModel):
+    response: str
+
 class TourGuideSection(BaseModel):
     section: str
     text: str
