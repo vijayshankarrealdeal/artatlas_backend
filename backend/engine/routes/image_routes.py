@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Query
-from backend.engine.art_managers.images import ProcessImages
+from engine.art_managers.images import ProcessImages
 
 
 image_router = APIRouter(tags=["image"])
