@@ -18,7 +18,7 @@ def llm_generate_artwork_metadata(payload: LLMInputPayload):
     image_bytes = io.BytesIO(response.content)
     image = Image.open(image_bytes)
     client = genai.Client(
-        api_key="AIzaSyC6cggUnSifC0GhyJ6pAyd9CidngT2j8x4"
+        api_key=os.getenv("GOOGLE_GENAI_API_KEY"),
     )
     model = "gemini-2.5-flash-preview-04-17"
     contents = [image, query]

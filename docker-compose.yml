@@ -3,7 +3,7 @@ version: '3.8'
 services:
   backend:
     build:
-      context: ./backend
+      context: .
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
@@ -12,7 +12,7 @@ services:
     networks:
       - artatlas-net
     volumes:
-      - ./backend:/app  # optional: only needed during dev
+      - .:/app  # optional: only needed during dev
 
   db:
     image: mongo:latest
