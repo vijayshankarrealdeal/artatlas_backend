@@ -100,12 +100,10 @@ class ArtManagerService:
                     f"Unexpected error during LLM enrichment for {artwork_doc['_id']}: {e}"
                 )
                 return ArtworkData(**artwork_doc)
-
-            update_payload = res_artwork_data.model_dump(
-                exclude_none=True,
-                by_alias=False,  # Use actual field names from the model for exclusion keys
-                exclude={"id"},  # Exclude the 'id' field from the Pydantic model
-            )
+            res_artwork_data = res_artwork_data.model_dump()
+            for k, v in artwork_doc.model_dump():
+                res_artwork_data[k] = v
+            res_artwork_data = ArtworkData(**res_artwork_data)
             update_payload_for_db = res_artwork_data.model_dump(
                 exclude_none=True,
                 by_alias=True,  # This will produce keys like '_id', 'artwork_title'
