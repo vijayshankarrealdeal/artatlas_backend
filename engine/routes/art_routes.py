@@ -3,7 +3,7 @@ from typing import Annotated, List, Optional
 from bson import ObjectId
 from pydantic import TypeAdapter
 from pymongo.database import Database
-from engine.art_managers.services import ArtManagerService
+from engine.art_managers.art_services import ArtManagerService
 from engine.data.db import get_db
 from engine.llm.audio_generate import text_to_wav
 from engine.llm.g_llm import llm_generate_artwork_metadata, llm_generate_audio_to_text
@@ -56,92 +56,13 @@ async def galleries(
     response_model=ArtworkData,
     summary="Get Picture Details by ID or Random",
 )  # Updated summary
-async def get_picture_of_the_day(  # Function name kept for consistency with your snippet
+async def get_picture_details(
     id: Optional[str] = Query(
-        None,
-        description="Optional ID of the artwork to fetch. If not provided, a random artwork is fetched.",
-    ),  # Make id a Query param
+        None, description="ID of the artwork to retrieve. If not provided, a random artwork is returned."
+    ),
     db: Database = Depends(get_db),
-) -> ArtworkData:
-    """
-    Retrieves a specific artwork by ID or a random one if no ID is provided.
-    If details are missing for the fetched artwork, they are generated using an LLM.
-    """
-    artwork_doc: Optional[dict] = None  # Use type hint for clarity
-
-    if id:
-        if not ObjectId.is_valid(id):
-            raise HTTPException(status_code=400, detail="Invalid artwork ID format.")
-        artwork_doc = db["artworks"].find_one({"_id": ObjectId(id)})
-    else:
-        # Fetch a random document if no ID is provided (as per original logic's fallback)
-        # Using $sample for randomness is better than find_one() which just gets the "first"
-        pipeline = [{"$sample": {"size": 1}}]
-        random_artworks = list(db["artworks"].aggregate(pipeline))
-        if random_artworks:
-            artwork_doc = random_artworks[0]
-
-    if not artwork_doc:
-        detail_msg = (
-            f"Artwork with ID '{id}' not found." if id else "No artworks found."
-        )
-        raise HTTPException(status_code=404, detail=detail_msg)
-
-    # Check if essential LLM-generated field 'details_in_image' is missing
-    if not artwork_doc.get("details_in_image"):
-        print(
-            f"Details missing for artwork {artwork_doc['_id']}. Generating with LLM..."
-        )
-
-        # Ensure payload passed to LLMInputPayload is a dictionary copy
-        llm_input = LLMInputPayload(payload=dict(artwork_doc))
-
-        try:
-            res_artwork_data = llm_generate_artwork_metadata(llm_input)
-            # print(f"LLM generated data for artwork {artwork_doc['_id']}: {res_artwork_data.model_dump_json(indent=2)}") # For debugging
-        except RuntimeError as e:
-            print(f"LLM generation failed for {artwork_doc['_id']}: {e}")
-            return ArtworkData(**artwork_doc)  # Return original if LLM fails
-        except Exception as e:  # Catch any other unexpected errors
-            print(
-                f"Unexpected error during LLM enrichment for {artwork_doc['_id']}: {e}"
-            )
-            return ArtworkData(**artwork_doc)
-
-        update_payload = res_artwork_data.model_dump(
-            exclude_none=True,
-            by_alias=False,  # Use actual field names from the model for exclusion keys
-            exclude={"id"},  # Exclude the 'id' field from the Pydantic model
-        )
-        update_payload_for_db = res_artwork_data.model_dump(
-            exclude_none=True,
-            by_alias=True,  # This will produce keys like '_id', 'artwork_title'
-        )
-
-        # Explicitly remove '_id' from the dictionary to be used in $set
-        if "_id" in update_payload_for_db:
-            del update_payload_for_db["_id"]
-
-        if update_payload_for_db:  # Only update if there are fields to set
-            result = db["artworks"].update_one(
-                {
-                    "_id": artwork_doc["_id"]
-                },  # Query by the original ObjectId (artwork_doc['_id'] is already ObjectId)
-                {"$set": update_payload_for_db},
-            )
-            if result.modified_count > 0:
-                print(f"Artwork {artwork_doc['_id']} updated with LLM generated data.")
-            else:
-                print(
-                    f"Artwork {artwork_doc['_id']} - No update performed (data might be identical or write concern issue). Matched: {result.matched_count}"
-                )
-
-        # The res_artwork_data already contains the 'id' field correctly populated (as string of ObjectId)
-        # because the ArtworkData model handles the _id -> id conversion.
-        return res_artwork_data
-
-    # If details were already present, return the document parsed as ArtworkData
-    return ArtworkData(**artwork_doc)
+):
+    return await ArtManagerService.get_picture_of_the_day(id=id, db=db)
 
 
 @art_router.get(
@@ -200,6 +121,7 @@ async def get_artworks_by_gallery_id(  # Changed to async, renamed for clarity
 async def ask_ai(
     artwork_data: Annotated[str, Form(...)],
     audio_file: Annotated[UploadFile, File(...)],
+    db: Database = Depends(get_db)
 ):
     try:
         # 
@@ -209,7 +131,7 @@ async def ask_ai(
         print(f"🔥 convert JSON string to Pydantic model manually, and Received file: {audio_file.filename} ({len(audio_bytes)} bytes)")
         print("🔥 Artwork data Prev:", artwork_data.model_dump_json(indent=2))
 
-        artwork_data = await get_picture_of_the_day(artwork_data.model_dump()['id'])
+        artwork_data = await ArtManagerService.get_picture_of_the_day(artwork_data.model_dump()['id'], db=db)
         print("🔥 Artwork data After:", artwork_data.model_dump_json(indent=2))
         llm_text = llm_generate_audio_to_text(audio_bytes, artwork_data.model_dump())
         print(llm_text)
