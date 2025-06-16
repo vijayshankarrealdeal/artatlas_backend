@@ -75,7 +75,7 @@ class ArtManagerService:
         else:
             user: UserApp = UserManager.check_user(db=db, user_id=user_uid, email=user_email)
             current_date = date.today()
-            last_date_str = user.get("last_random_art_date")
+            last_date_str = user.last_random_art_date
             last_date = date.fromisoformat(last_date_str) if last_date_str else None
 
             if not last_date or last_date < current_date:
