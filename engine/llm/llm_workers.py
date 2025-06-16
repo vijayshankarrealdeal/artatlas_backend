@@ -39,11 +39,11 @@ ARCHIVE_URL = "https://storage.googleapis.com/image_art/archive.zip"
 device = "cuda" if torch.cuda.is_available() else "cpu"
 MODEL = CLIPModel.from_pretrained(
     "openai/clip-vit-base-patch32",
-    cache_dir="./openai/clip-vit-base-patch32",  # Use CACHE_DIR from .env or default to './cache'
+   # cache_dir="./openai/clip-vit-base-patch32",  # Use CACHE_DIR from .env or default to './cache'
 ).to(device)
 PROCESSOR = CLIPProcessor.from_pretrained(
     "openai/clip-vit-base-patch32",
-    cache_dir="./openai/clip-vit-base-patch32",  # Use CACHE_DIR from .env or default to './cache'
+    #cache_dir="./openai/clip-vit-base-patch32",  # Use CACHE_DIR from .env or default to './cache'
 )
 
 
