@@ -9,11 +9,12 @@ RUN apt-get update \
 WORKDIR /app
 
 RUN curl -fsSL "https://storage.googleapis.com/image_art/archive.zip" -o archive.zip \
- && mkdir -p /app/repository \
- && unzip archive.zip -d /app/repository \
+ && mkdir -p /app/engine/repository/archive \
+ && unzip archive.zip -d /app/engine/repository/archive \
  && rm archive.zip
 
-RUN ls -l /app/repository/archive
+
+RUN ls -l /app/engine/repository/archive
 # 2) Install Python deps
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
