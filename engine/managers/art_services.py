@@ -7,6 +7,7 @@ from engine.managers.user_manager import UserManager
 from engine.llm.llm_workers import llm_generate_artwork_metadata
 from engine.models.artworks_model import ArtworkData, LLMInputPayload
 from engine.models.gallery_model import GalleryData
+from engine.models.user_model import UserApp
 
 
 class ArtManagerService:
@@ -72,7 +73,7 @@ class ArtManagerService:
                 )
             artwork_doc = db["artworks"].find_one({"_id": ObjectId(id)})
         else:
-            user = UserManager.check_user(db=db, user_id=user_uid, email=user_email)
+            user: UserApp = UserManager.check_user(db=db, user_id=user_uid, email=user_email)
             current_date = date.today()
             last_date_str = user.get("last_random_art_date")
             last_date = date.fromisoformat(last_date_str) if last_date_str else None
@@ -87,8 +88,8 @@ class ArtManagerService:
                         }
                     },
                 )
-                user["daily_random_art_count_img"] = 0  # Update local copy
-            if user.get("daily_random_art_count_img", 0) < RANDOM_ART_DAILY_LIMIT:
+                user["daily_random_art_count_img"] = 0 
+            if user.daily_random_art_count_img < RANDOM_ART_DAILY_LIMIT:
                 print(
                     f"User {user_uid} has random picks left. Fetching from 'artworks'."
                 )

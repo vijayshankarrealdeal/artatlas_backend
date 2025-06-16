@@ -26,7 +26,7 @@ from engine.fb.firebase import oauth2_scheme
 from pydantic import TypeAdapter
 from datetime import datetime, date, timezone
 
-from engine.models.user_model import ChatHistory, ChatMessage, ChatMessageRole, User
+from engine.models.user_model import ChatHistory, ChatMessage, ChatMessageRole, UserApp
 
 
 FREE_TIER_DAILY_LIMIT = 5
@@ -139,7 +139,7 @@ async def ask_ai(
     email = request.state.user["email"]
     current_date = date.today()
 
-    user = UserManager.check_user(db=db, user_id=user_id, email=email)
+    user: UserApp = UserManager.check_user(db=db, user_id=user_id, email=email)
     if user.subscription_status != "active":
         if user.last_interaction_date and user.last_interaction_date < current_date:
             user.daily_interaction_count = 0
@@ -211,15 +211,13 @@ async def ask_ai(
     )
 
     if user.subscription_status != "active":
-        user_collection.update_one(
+        db["users"].update_one(
             {"_id": user_id},
             {
                 "$inc": {"daily_interaction_count": 1},
                 "$set": {"last_interaction_date": current_date.isoformat()},
             },
         )
-
-    # 8. --- Generate Final Audio Response ---
     response_bytes = text_to_wav(llm_output.response)
     return Response(content=response_bytes, media_type="application/octet-stream")
 

@@ -14,7 +14,7 @@ from engine.models.artworks_model import (
     AudioQuery,
     LLMInputPayload,
 )  # Assuming these are defined elsewhere
-from google.genai.types import HttpOptions, Part
+from google.genai.types import HttpOptions
 import logging
 
 from engine.models.user_model import ChatMessage
@@ -50,7 +50,7 @@ def llm_generate_artwork_metadata(payload: LLMInputPayload) -> ArtworkData:
     image_url = processed_payload.get("image")
     query_text = processed_payload.get(
         "query"
-    )  # This is the user query/instruction for the LLM
+    )  
 
     if not image_url:
         logger.error("Image URL is missing in the payload.")

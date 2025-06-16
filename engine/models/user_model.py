@@ -32,7 +32,7 @@ class SubscriptionStatus(str, Enum):
     FREE_TIER = "free_tier"
 
 
-class User(BaseModel):
+class UserApp(BaseModel):
     id: Optional[str] = Field(None, alias="_id")
     email: EmailStr = Field(..., description="User's email address.")
     subscription_status: SubscriptionStatus = Field(default=SubscriptionStatus.FREE_TIER)
