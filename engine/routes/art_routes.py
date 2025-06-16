@@ -183,7 +183,7 @@ async def ask_ai(
 
     llm_output: AudioQuery = llm_generate_audio_to_text(
         audio_bytes=audio_bytes,
-        artwork_info=artwork_details.model_dump(),
+        artwork_json=artwork_details.model_dump(),
         conversation_history=previous_dialogue,
     )
 
