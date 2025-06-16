@@ -35,17 +35,13 @@ logger = logging.getLogger(__name__)
 
 load_dotenv()
 
-ARCHIVE_DIR = "/app/openai/clip-vit-base-patch32"  
+ARCHIVE_URL = "https://storage.googleapis.com/image_art/archive.zip"
 device = "cuda" if torch.cuda.is_available() else "cpu"
 MODEL = CLIPModel.from_pretrained(
-    ARCHIVE_DIR,
-    cache_dir=ARCHIVE_DIR,
-    local_files_only=True,
+    ARCHIVE_URL,
 ).to(device)
 PROCESSOR = CLIPProcessor.from_pretrained(
-    ARCHIVE_DIR,
-    cache_dir=ARCHIVE_DIR,
-    local_files_only=True,
+    ARCHIVE_URL,
 )
 
 
