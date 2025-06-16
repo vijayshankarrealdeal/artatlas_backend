@@ -1,5 +1,5 @@
 # hack_back/main.py
-import firebase_admin
+import firebase_admin, json, os, base64
 from firebase_admin import credentials
 from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -24,7 +24,12 @@ async def on_startup():
     """Application startup event: connect to DB and ensure indexes."""
     print("Application starting up...")
     try:
-        cred = credentials.Certificate("serviceAccountKey.json") # Make sure the path is correct
+        firebase_creds_base64 = os.getenv("FIREBASE_CREDENTIALS")
+        if not firebase_creds_base64:
+            raise ValueError("FIREBASE_CREDENTIALS environment variable not set.")
+        decoded_creds_json = base64.b64decode(firebase_creds_base64).decode("utf-8")
+        creds_dict = json.loads(decoded_creds_json)
+        cred = credentials.Certificate(creds_dict) # Make sure the path is correct
         firebase_admin.initialize_app(cred)
         connect_to_mongo()
         db = get_db()
