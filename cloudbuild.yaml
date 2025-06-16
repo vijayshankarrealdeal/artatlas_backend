@@ -33,7 +33,7 @@ steps:
               cd /home/g499_bt19 || return 1
 
               echo '[RESET] Removing old project...'
-              rm -rf artatlas_backend
+              sudo rm -rf artatlas_backend
 
               echo '[RESET] Cloning fresh repo...'
               git clone https://github.com/vijayshankarrealdeal/artatlas_backend.git || return 1
