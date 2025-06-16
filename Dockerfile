@@ -15,8 +15,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-RUN ls -a
-RUN pwd
+RUN ls -lR /app
 
 RUN curl -fsSL "https://storage.googleapis.com/image_art/archive.zip" -o archive.zip \
  && mkdir -p /app/engine/extras/archive \
