@@ -7,7 +7,7 @@ from engine.data.db import get_db
 from engine.models.user_model import SubscriptionStatus, UserSubscriptionPayload
 from engine.fb.firebase import oauth2_scheme
 
-user_route = APIRouter(prefix="/user", tags=["user"])
+user_route = APIRouter(tags=["user"])
 
 
 @user_route.post(

@@ -14,8 +14,8 @@ from typing import Annotated, List, Optional
 from bson import ObjectId
 from pydantic import TypeAdapter
 from pymongo.database import Database
-from engine.art_managers.art_services import ArtManagerService
-from engine.art_managers.user_manager import UserManager
+from engine.managers.art_services import ArtManagerService
+from engine.managers.user_manager import UserManager
 from engine.data.db import get_db
 from engine.llm.audio_generate import text_to_wav
 from engine.llm.llm_workers import llm_generate_audio_to_text, search_similar

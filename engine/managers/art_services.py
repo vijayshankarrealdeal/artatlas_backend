@@ -3,7 +3,7 @@ from typing import List, Optional, Union
 from bson import ObjectId
 from fastapi import HTTPException
 from pymongo.database import Database
-from engine.art_managers.user_manager import UserManager
+from engine.managers.user_manager import UserManager
 from engine.llm.llm_workers import llm_generate_artwork_metadata
 from engine.models.artworks_model import ArtworkData, LLMInputPayload
 from engine.models.gallery_model import GalleryData
