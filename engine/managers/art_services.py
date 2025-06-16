@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 from typing import List, Optional, Union
 from bson import ObjectId
 from fastapi import HTTPException
@@ -77,9 +77,12 @@ class ArtManagerService:
                 db=db, user_id=user_uid, email=user_email
             )
             current_date = date.today()
-            last_date_str = user.last_random_art_date
+            try:
+                last_date_str = date.fromisoformat(user.last_random_art_date)
+            except (TypeError, ValueError):
+                last_date_str = current_date - timedelta(days=1)
 
-            if not last_date_str or date.fromisoformat(last_date_str) < current_date:
+            if last_date_str < current_date:
                 db["users"].update_one(
                     {"_id": user_uid},
                     {
