@@ -166,7 +166,7 @@ async def ask_ai(
     artwork_details: ArtworkData = await ArtManagerService.get_picture_of_the_day(
         user_email=email,
         user_uid=user_id,
-        artwork_id=artwork_id,
+        id=artwork_id,
         db=db
     )
     audio_bytes = await audio_file.read()
