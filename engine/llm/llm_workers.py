@@ -3,7 +3,7 @@ from google import genai
 from PIL import Image
 from google.genai import types
 import requests
-import io
+import io, os
 import json
 import numpy as np
 from dotenv import load_dotenv
@@ -34,13 +34,17 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 load_dotenv()
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+ARCHIVE_DIR = os.path.join(BASE_DIR, "repository", "archive")
+
 device = "cuda" if torch.cuda.is_available() else "cpu"
 MODEL = CLIPModel.from_pretrained(
-    pretrained_model_name_or_path="repository/archive",
+    pretrained_model_name_or_path=ARCHIVE_DIR,
     local_files_only=True,
 ).to(device)
 PROCESSOR = CLIPProcessor.from_pretrained(
-    pretrained_model_name_or_path="repository/archive",
+    pretrained_model_name_or_path=ARCHIVE_DIR,
     local_files_only=True,
 )
 

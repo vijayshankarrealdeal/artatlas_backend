@@ -13,6 +13,7 @@ RUN curl -fsSL "https://storage.googleapis.com/image_art/archive.zip" -o archive
  && unzip archive.zip -d /app/repository \
  && rm archive.zip
 
+RUN ls -l /app/repository/archive
 # 2) Install Python deps
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
