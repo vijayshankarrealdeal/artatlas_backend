@@ -194,10 +194,10 @@ def llm_generate_audio_to_text(audio_bytes: bytes, artwork_json: dict, conversat
         f"Received audio bytes (length: {len(audio_bytes) if audio_bytes else 0}). Artwork JSON: {artwork_json}"
     )
     message_context = []
-    for message_context in conversation_history:
+    for message_ctx in conversation_history:
         message_context.append({
-            "role": message_context.role.value, # "user" or "assistant"
-            "content": message_context.content
+            "role": message_ctx.role.value,
+            "content": message_ctx.content
         })
 
     if not audio_bytes:
