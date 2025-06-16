@@ -16,3 +16,4 @@ torchvision
 transformers
 numpy 
 faiss-cpu
+pydantic[email]
