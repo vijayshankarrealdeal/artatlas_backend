@@ -73,12 +73,13 @@ class ArtManagerService:
                 )
             artwork_doc = db["artworks"].find_one({"_id": ObjectId(id)})
         else:
-            user: UserApp = UserManager.check_user(db=db, user_id=user_uid, email=user_email)
+            user: UserApp = UserManager.check_user(
+                db=db, user_id=user_uid, email=user_email
+            )
             current_date = date.today()
             last_date_str = user.last_random_art_date
-            last_date = date.fromisoformat(last_date_str) if last_date_str else None
 
-            if not last_date or last_date < current_date:
+            if not last_date_str or date.fromisoformat(last_date_str) < current_date:
                 db["users"].update_one(
                     {"_id": user_uid},
                     {
@@ -88,7 +89,7 @@ class ArtManagerService:
                         }
                     },
                 )
-                user.daily_random_art_count_img = 0 
+                user.daily_random_art_count_img = 0
             if user.daily_random_art_count_img < RANDOM_ART_DAILY_LIMIT:
                 print(
                     f"User {user_uid} has random picks left. Fetching from 'artworks'."
