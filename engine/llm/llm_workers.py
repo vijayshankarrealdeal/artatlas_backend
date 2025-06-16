@@ -35,8 +35,12 @@ logger = logging.getLogger(__name__)
 
 load_dotenv()
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-ARCHIVE_DIR = os.path.join(BASE_DIR, "repository", "archive")
+current_dir = os.path.dirname(os.path.abspath(__file__))
+# Go up one level to get /app/engine
+parent_dir = os.path.dirname(current_dir) 
+# Now construct the correct path
+ARCHIVE_DIR = os.path.join(parent_dir, "repository", "archive") # Results in /app/engine/repository/archive
+
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 MODEL = CLIPModel.from_pretrained(
