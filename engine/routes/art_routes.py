@@ -127,8 +127,8 @@ async def ask_ai(
     audio_file: Annotated[UploadFile, File(...)],
     db: Database = Depends(get_db),
 ):
-    user_id = request.state.uid
-    email = request.state.email
+    user_id = request.state.user['uid']
+    email = request.state.user['email']
     current_date = date.today()
 
 
