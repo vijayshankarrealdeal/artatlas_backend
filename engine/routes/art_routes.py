@@ -125,7 +125,8 @@ async def ask_ai(
         artwork_data = await ArtManagerService.get_picture_of_the_day(
             artwork_data.model_dump()["id"], db=db
         )
-        llm_text = llm_generate_audio_to_text(audio_bytes, artwork_data.model_dump())
+        llm_text, llm_parsed = llm_generate_audio_to_text(audio_bytes, artwork_data.model_dump())
+        print(f"LLM generated text: {llm_parsed}")
         response_bytes = text_to_wav(llm_text)
         return Response(content=response_bytes, media_type="application/octet-stream")
     except Exception as e:
@@ -136,7 +137,7 @@ async def ask_ai(
 @art_router.get(
     '/get_similar_artworks',
     response_model=List[ArtworkData],
-   # dependencies=[Depends(oauth2_scheme)],
+    dependencies=[Depends(oauth2_scheme)],
 )
 async def get_similar_artworks(
     request: Request,
