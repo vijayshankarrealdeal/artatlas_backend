@@ -88,7 +88,7 @@ class ArtManagerService:
                         }
                     },
                 )
-                user["daily_random_art_count_img"] = 0 
+                user.daily_random_art_count_img = 0 
             if user.daily_random_art_count_img < RANDOM_ART_DAILY_LIMIT:
                 print(
                     f"User {user_uid} has random picks left. Fetching from 'artworks'."
