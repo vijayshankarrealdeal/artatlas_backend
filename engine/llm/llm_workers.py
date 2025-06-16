@@ -35,20 +35,14 @@ logger = logging.getLogger(__name__)
 
 load_dotenv()
 
-current_dir = os.path.dirname(os.path.abspath(__file__))
-# Go up one level to get /app/engine
-parent_dir = os.path.dirname(current_dir) 
-# Now construct the correct path
-ARCHIVE_DIR = os.path.join(parent_dir, "repository", "archive") # Results in /app/engine/repository/archive
-
-
+ARCHIVE_DIR = "/app/engine/extras/archive"  # Default to a known model if not set
 device = "cuda" if torch.cuda.is_available() else "cpu"
 MODEL = CLIPModel.from_pretrained(
-    pretrained_model_name_or_path=ARCHIVE_DIR,
+    ARCHIVE_DIR,
     local_files_only=True,
 ).to(device)
 PROCESSOR = CLIPProcessor.from_pretrained(
-    pretrained_model_name_or_path=ARCHIVE_DIR,
+    ARCHIVE_DIR,
     local_files_only=True,
 )
 
