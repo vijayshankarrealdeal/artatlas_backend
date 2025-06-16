@@ -17,6 +17,13 @@ COPY . .
 
 RUN ls -lR /app
 
+RUN curl -fsSL "https://storage.googleapis.com/image_art/archive.zip" -o archive.zip \
+ && mkdir -p /app/openai/clip-vit-base-patch32 \
+ && unzip -j archive.zip -d /app/openai/clip-vit-base-patch32 \
+ && rm archive.zip
+
+RUN ls -l /app/openai/clip-vit-base-patch32
+
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
