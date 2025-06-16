@@ -40,9 +40,10 @@ docker ps
 
 
 # Build the container image
+# Deploy to Cloud Run
 gcloud builds submit --tag gcr.io/blissful-mile-461403-i2/artatlas
 
-# Deploy to Cloud Run
+
 gcloud run deploy artatlas \
   --image gcr.io/blissful-mile-461403-i2/artatlas \
   --platform managed \
