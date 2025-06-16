@@ -39,10 +39,12 @@ ARCHIVE_DIR = "/app/openai/clip-vit-base-patch32"
 device = "cuda" if torch.cuda.is_available() else "cpu"
 MODEL = CLIPModel.from_pretrained(
     ARCHIVE_DIR,
+    cache_dir=ARCHIVE_DIR,
     local_files_only=True,
 ).to(device)
 PROCESSOR = CLIPProcessor.from_pretrained(
     ARCHIVE_DIR,
+    cache_dir=ARCHIVE_DIR,
     local_files_only=True,
 )
 
