@@ -221,7 +221,6 @@ def llm_generate_audio_to_text(audio_bytes: bytes, artwork_json: dict) -> str:
             ),
         ],
     )
-    llm_output_text = None
     try:
         logger.info(
             f"Sending request to Gemini model: {model_name} for audio-to-text and query answering."
@@ -237,7 +236,7 @@ def llm_generate_audio_to_text(audio_bytes: bytes, artwork_json: dict) -> str:
         logger.info(
             f"Successfully received response from Gemini model for audio processing., 🔥 response {llm_output}"
         )
-        return llm_output.parsed.response , llm_output.parsed
+        return llm_output.parsed
 
     except Exception as e:
         logger.error(f"Error calling Gemini API for audio-to-text. Error: {e}")

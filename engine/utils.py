@@ -26,6 +26,7 @@ def ensure_text_index(db: Database):
             default_language="english",
             weights={"artwork_title": 10, "artist_name": 5, "category": 2},
         )
+        db.chat_histories.create_index([("user_id", 1), ("artwork_id", 1)])
         print("Text index on 'artworks' collection ensured.")
     except Exception as e:
         print(f"Error creating text index: {e}")
