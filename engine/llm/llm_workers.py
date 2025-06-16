@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 
 load_dotenv()
 
-ARCHIVE_DIR = "/app/engine/extras/archive/"  
+ARCHIVE_DIR = "/app/openai/clip-vit-base-patch32"  
 device = "cuda" if torch.cuda.is_available() else "cpu"
 MODEL = CLIPModel.from_pretrained(
     ARCHIVE_DIR,
