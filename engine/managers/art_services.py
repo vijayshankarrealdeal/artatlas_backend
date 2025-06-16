@@ -1,4 +1,5 @@
 from datetime import date, timedelta
+import random
 from typing import List, Optional, Union
 from bson import ObjectId
 from fastapi import HTTPException
@@ -112,13 +113,15 @@ class ArtManagerService:
                 )
                 artwork_doc = artwork
             else:
-                print("Im here - daily art excceeded limit")
-                daily = list(db["daily_art_for_user"].find().sort("display_order", 1))
-                print(f"Daily artworks found: {len(daily)}, daily: {daily}")
-                if not daily:
-                    raise HTTPException(404, "Daily artworks not configured yet.")
-                return ArtworkData(**daily[0])
-
+                seen_ids: List[str] = user.daily_random_art_ids
+                if seen_ids:
+                    chosen_id = random.choice(seen_ids)
+                    artwork_doc = db["artworks"].find_one({"_id": ObjectId(chosen_id)})
+                    if not artwork_doc:
+                        raise HTTPException(
+                            status_code=404,
+                            detail=f"Artwork {chosen_id!r} not found.",
+                        )
         if not artwork_doc.get("details_in_image"):
             print(
                 f"Details missing for artwork {artwork_doc['_id']}. Generating with LLM..."
