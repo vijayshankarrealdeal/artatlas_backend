@@ -31,32 +31,42 @@ class SubscriptionStatus(str, Enum):
     INACTIVE = "inactive"
     FREE_TIER = "free_tier"
 
+from bson import ObjectId
+from pydantic import field_validator
 
 class UserApp(BaseModel):
     id: Optional[str] = Field(None, alias="_id")
-    email: EmailStr = Field(..., description="User's email address.")
-    subscription_status: SubscriptionStatus = Field(default=SubscriptionStatus.FREE_TIER)
-    daily_interaction_count: int = Field(default=0)
-    daily_random_art_count_img: int = Field(default=0, description="Count of random artworks viewed today.")
-    last_interaction_date: Optional[date] = Field(default=None)
-    last_random_art_date: Optional[date] = Field(default=None, description="Date of the last random artwork viewed.")
+    email: EmailStr
+    subscription_status: SubscriptionStatus = SubscriptionStatus.FREE_TIER
+    daily_interaction_count: int = 0
+    daily_random_art_count_img: int = Field(
+        default=0,
+        description="Count of random artworks viewed today.",
+    )
+    last_interaction_date: Optional[date] = None
+    last_random_art_date: Optional[date] = None
     daily_random_art_ids: List[str] = Field(default_factory=list)
-    
+
     @field_validator("id", mode="before")
     @classmethod
-    def convert_objectid_to_str(cls, value):
-        if isinstance(value, ObjectId):
-            return str(value)
-        return value
+    def convert_objectid_to_str(cls, v):
+        if isinstance(v, ObjectId):
+            return str(v)
+        return v
+
+    @field_validator("daily_random_art_ids", mode="before")
+    @classmethod
+    def convert_daily_ids(cls, v):
+        # v might be None, a list of ObjectId, or a list of str
+        if isinstance(v, list):
+            return [str(item) if isinstance(item, ObjectId) else item for item in v]
+        return v
 
     class Config:
-        populate_by_name = True  # Allows using alias "_id" for field "id" during initialization
-        arbitrary_types_allowed = True # Good to keep if you might use other custom types directly
-        json_encoders = {
-            ObjectId: str  # Correctly serialize any ObjectId instances to str
-                           # This is useful if other fields were to remain ObjectId type.
-                           # For 'id', it's already str after the validator.
-        }
+        populate_by_name = True
+        arbitrary_types_allowed = True
+        json_encoders = { ObjectId: str }
+
 
 class UserSubscriptionPayload(BaseModel):
     """
