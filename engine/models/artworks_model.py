@@ -5,6 +5,7 @@ from bson import ObjectId  # Requires installation of 'bson', usually included w
 
 class AudioQuery(BaseModel):
     response: str
+    audio_text: str
 
 class TourGuideSection(BaseModel):
     section: str
