@@ -11,3 +11,8 @@ pillow
 python-multipart
 google-cloud-texttospeech
 google-genai
+torch
+torchvision
+transformers
+numpy 
+faiss-cpu
