@@ -1,4 +1,3 @@
-
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pymongo.collection import ReturnDocument
 from datetime import datetime, timezone
@@ -13,53 +12,52 @@ user_route = APIRouter(tags=["user"])
 @user_route.post(
     "/subscription",
     status_code=status.HTTP_200_OK,
-    dependencies=[Depends(oauth2_scheme)] # SECURE THE ENDPOINT
+    dependencies=[Depends(oauth2_scheme)],  # SECURE THE ENDPOINT
 )
 async def update_own_subscription(
-    request: Request,
-    payload: UserSubscriptionPayload,
-    db: Database = Depends(get_db)
+    request: Request, payload: UserSubscriptionPayload, db: Database = Depends(get_db)
 ):
-    user_id = request.state.user['uid']
-    email_from_token = request.state.user['email']
-    
+    user_id = request.state.user["uid"]
+    email_from_token = request.state.user["email"]
+
     user_collection = db["users"]
-    
+
     # 2. Define the fields to update
     update_fields = {
-        "subscription_status": payload.new_status.value,
         "subscription_provider_id": payload.subscription_provider_id,
-        "updated_at": datetime.now(timezone.utc)
+        "updated_at": datetime.now(timezone.utc),
     }
-    update_fields = {k: v for k, v in update_fields.items() if v is not None}
+    if payload.new_status is not None:
+        update_fields["subscription_status"] = payload.new_status.value
 
-    # 3. Perform the atomic "find and upsert" operation using the user's ID
     updated_user = user_collection.find_one_and_update(
-        # The filter now uses the immutable user ID
         {"_id": user_id},
         {
-            # These fields are applied on both update and insert
             "$set": update_fields,
-            # These fields are applied ONLY when a new user is created
-            "$setOnInsert": { 
-                "_id": user_id, # Set the ID from the token
-                "email": email_from_token, # Set the email from the token
+            "$setOnInsert": {
+                "_id": user_id,
+                "email": email_from_token,
                 "created_at": datetime.now(timezone.utc),
-                "subscription_status": SubscriptionStatus.FREE_TIER.value # Default status
-            }
+                # only set a default if the client didn't send any status
+                **(
+                    {}
+                    if payload.new_status is not None
+                    else {"subscription_status": SubscriptionStatus.FREE_TIER.value}
+                ),
+            },
         },
-        upsert=True,  # This creates the document if `_id` is not found
-        return_document=ReturnDocument.AFTER
+        upsert=True,
+        return_document=ReturnDocument.AFTER,
     )
 
     if not updated_user:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to update or create user subscription."
+            detail="Failed to update or create user subscription.",
         )
 
     return {
         "status": "success",
         "message": f"User {updated_user['email']} subscription status updated to {updated_user['subscription_status']}.",
-        "user_id": updated_user["_id"]
+        "user_id": updated_user["_id"],
     }
