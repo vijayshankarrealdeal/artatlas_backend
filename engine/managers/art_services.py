@@ -112,7 +112,9 @@ class ArtManagerService:
                 )
                 artwork_doc = artwork
             else:
+                print("Im here - daily art excceeded limit")
                 daily = list(db["daily_art_for_user"].find().sort("display_order", 1))
+                print(f"Daily artworks found: {len(daily)}, daily: {daily}")
                 if not daily:
                     raise HTTPException(404, "Daily artworks not configured yet.")
                 return ArtworkData(**daily[0])
