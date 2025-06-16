@@ -8,6 +8,16 @@ RUN apt-get update \
 
 WORKDIR /app
 
+
+# 2) Install Python deps
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+RUN ls -a
+RUN pwd
+
 RUN curl -fsSL "https://storage.googleapis.com/image_art/archive.zip" -o archive.zip \
  && mkdir -p /app/engine/extras/archive \
  && unzip archive.zip -d /app/engine/extras/archive \
@@ -15,11 +25,6 @@ RUN curl -fsSL "https://storage.googleapis.com/image_art/archive.zip" -o archive
 
 
 RUN ls -l /app/engine/extras/archive
-# 2) Install Python deps
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-COPY . .
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
