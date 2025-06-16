@@ -35,9 +35,14 @@ logger = logging.getLogger(__name__)
 
 load_dotenv()
 device = "cuda" if torch.cuda.is_available() else "cpu"
-MODEL = CLIPModel.from_pretrained("openai/clip-vit-base-patch32").to(device)
-PROCESSOR = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
-
+MODEL = CLIPModel.from_pretrained(
+    pretrained_model_name_or_path="repository/archive",
+    local_files_only=True,
+).to(device)
+PROCESSOR = CLIPProcessor.from_pretrained(
+    pretrained_model_name_or_path="repository/archive",
+    local_files_only=True,
+)
 
 
 def llm_generate_artwork_metadata(payload: LLMInputPayload) -> ArtworkData:
@@ -48,9 +53,7 @@ def llm_generate_artwork_metadata(payload: LLMInputPayload) -> ArtworkData:
     logger.debug(f"Generated payload for LLM: {processed_payload}")
 
     image_url = processed_payload.get("image")
-    query_text = processed_payload.get(
-        "query"
-    )  
+    query_text = processed_payload.get("query")
 
     if not image_url:
         logger.error("Image URL is missing in the payload.")
@@ -188,17 +191,18 @@ def llm_generate_artwork_metadata(payload: LLMInputPayload) -> ArtworkData:
     return artwork_data_instance
 
 
-def llm_generate_audio_to_text(audio_bytes: bytes, artwork_json: dict, conversation_history: List[ChatMessage]) -> str:
+def llm_generate_audio_to_text(
+    audio_bytes: bytes, artwork_json: dict, conversation_history: List[ChatMessage]
+) -> str:
     logger.info("Starting llm_generate_audio_to_text function.")
     logger.debug(
         f"Received audio bytes (length: {len(audio_bytes) if audio_bytes else 0}). Artwork JSON: {artwork_json}"
     )
     message_context = []
     for message_ctx in conversation_history:
-        message_context.append({
-            "role": message_ctx.role.value,
-            "content": message_ctx.content
-        })
+        message_context.append(
+            {"role": message_ctx.role.value, "content": message_ctx.content}
+        )
 
     if not audio_bytes:
         logger.error("Audio bytes are empty.")
@@ -257,7 +261,6 @@ def search_similar(
     collection,
     top_k=5,
 ):
-
     """
     Search for images similar to the query using the $search stage with knnBeta.
     - If query starts with 'http', download & embed on the fly.

@@ -1,21 +1,27 @@
 FROM python:3.11-slim
 
-# Set working directory
+RUN apt-get update \
+ && apt-get install --no-install-recommends -y \
+      unzip \
+      curl \
+ && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
-# Install dependencies
+RUN curl -fsSL "https://storage.googleapis.com/image_art/archive.zip" -o archive.zip \
+ && mkdir -p repository/archive \
+ && unzip archive.zip -d repository/archive \
+ && rm archive.zip
+
+# 2) Install Python deps
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy entire project
 COPY . .
 
-# Environment settings
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
 
-# Expose port
 EXPOSE 8080
 
-# Run FastAPI app (update this line to match root-level main.py)
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
