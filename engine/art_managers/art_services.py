@@ -1,7 +1,9 @@
+from datetime import date
 from typing import List, Optional, Union
 from bson import ObjectId
 from fastapi import HTTPException
 from pymongo.database import Database
+from engine.art_managers.user_manager import UserManager
 from engine.llm.llm_workers import llm_generate_artwork_metadata
 from engine.models.artworks_model import ArtworkData, LLMInputPayload
 from engine.models.gallery_model import GalleryData
@@ -53,11 +55,14 @@ class ArtManagerService:
         results = [GalleryData(**doc) for doc in docs]
         return results
 
-    async def get_picture_of_the_day(id: str, db: Database) -> ArtworkData:
+    async def get_picture_of_the_day(
+        user_uid, user_email, id: str, db: Database
+    ) -> ArtworkData:
         """
         Retrieves a specific artwork by ID or a random one if no ID is provided.
         If details are missing for the fetched artwork, they are generated using an LLM.
         """
+        RANDOM_ART_DAILY_LIMIT = 5
         artwork_doc: Optional[dict] = None  # Use type hint for clarity
 
         if id:
@@ -67,13 +72,53 @@ class ArtManagerService:
                 )
             artwork_doc = db["artworks"].find_one({"_id": ObjectId(id)})
         else:
-            # Fetch a random document if no ID is provided (as per original logic's fallback)
-            # Using $sample for randomness is better than find_one() which just gets the "first"
-            pipeline = [{"$sample": {"size": 1}}]
-            random_artworks = list(db["artworks"].aggregate(pipeline))
-            if random_artworks:
-                artwork_doc = random_artworks[0]
+            user = UserManager.check_user(db=db, user_id=user_uid, email=user_email)
+            current_date = date.today()
+            last_date_str = user.get("last_random_art_date")
+            last_date = date.fromisoformat(last_date_str) if last_date_str else None
 
+            if not last_date or last_date < current_date:
+                db["users"].update_one(
+                    {"_id": user_uid},
+                    {
+                        "$set": {
+                            "daily_random_art_count_img": 0,
+                            "last_random_art_date": current_date.isoformat(),
+                        }
+                    },
+                )
+                user["daily_random_art_count_img"] = 0  # Update local copy
+            if user.get("daily_random_art_count_img", 0) < RANDOM_ART_DAILY_LIMIT:
+                print(
+                    f"User {user_uid} has random picks left. Fetching from 'artworks'."
+                )
+                pipeline = [{"$sample": {"size": 1}}]
+                random_artworks = list(db["artworks"].aggregate(pipeline))
+                if not random_artworks:
+                    raise HTTPException(
+                        status_code=404, detail="No artworks available to choose from."
+                    )
+
+                artwork_doc = random_artworks[0]
+                db["users"].update_one(
+                    {"_id": user_uid}, {"$inc": {"daily_random_art_count_img": 1}}
+                )
+            else:
+                print(
+                    f"User {user_uid} limit reached. Fetching from 'daily_art_for_user'."
+                )
+
+                daily_art_cursor = (
+                    db["daily_art_for_user"].find({}).sort("display_order", 1)
+                )  # Optional sort
+                daily_artworks = [ArtworkData(**doc) for doc in daily_art_cursor]
+
+                if not daily_artworks:
+                    raise HTTPException(
+                        status_code=404,
+                        detail="Daily artworks are not configured yet. Please check back later.",
+                    )
+                return daily_artworks[0]
         if not artwork_doc:
             detail_msg = (
                 f"Artwork with ID '{id}' not found." if id else "No artworks found."
@@ -128,12 +173,7 @@ class ArtManagerService:
                     print(
                         f"Artwork {artwork_doc['_id']} - No update performed (data might be identical or write concern issue). Matched: {result.matched_count}"
                     )
-
-            # The res_artwork_data already contains the 'id' field correctly populated (as string of ObjectId)
-            # because the ArtworkData model handles the _id -> id conversion.
             return res_artwork_data
-
-        # If details were already present, return the document parsed as ArtworkData
         return ArtworkData(**artwork_doc)
 
     async def get_artworks_by_gallery_id(
@@ -185,7 +225,9 @@ class ArtManagerService:
 
         return results
 
-    async def fetch_artworks_by_ids(ids: Union[str, List[str]], db: Database) -> List[ArtworkData]:
+    async def fetch_artworks_by_ids(
+        ids: Union[str, List[str]], db: Database
+    ) -> List[ArtworkData]:
         if isinstance(ids, str):
             id_list = [ids]
         else:
@@ -201,7 +243,7 @@ class ArtManagerService:
 
         # 3. Build the efficient '$in' query
         query = {"_id": {"$in": object_ids}}
-        cursor = db['artworks'].find(query)
+        cursor = db["artworks"].find(query)
         results = cursor.to_list(length=len(object_ids))
         results = [ArtworkData(**doc) for doc in results]
         return results

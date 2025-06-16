@@ -1,3 +1,4 @@
+from typing import List
 from google import genai
 from PIL import Image
 from google.genai import types
@@ -16,6 +17,7 @@ from engine.models.artworks_model import (
 from google.genai.types import HttpOptions, Part
 import logging
 
+from engine.models.user_model import ChatMessage
 from engine.utils import download_image
 
 
@@ -186,11 +188,17 @@ def llm_generate_artwork_metadata(payload: LLMInputPayload) -> ArtworkData:
     return artwork_data_instance
 
 
-def llm_generate_audio_to_text(audio_bytes: bytes, artwork_json: dict) -> str:
+def llm_generate_audio_to_text(audio_bytes: bytes, artwork_json: dict, conversation_history: List[ChatMessage]) -> str:
     logger.info("Starting llm_generate_audio_to_text function.")
     logger.debug(
         f"Received audio bytes (length: {len(audio_bytes) if audio_bytes else 0}). Artwork JSON: {artwork_json}"
     )
+    message_context = []
+    for message_context in conversation_history:
+        message_context.append({
+            "role": message_context.role.value, # "user" or "assistant"
+            "content": message_context.content
+        })
 
     if not audio_bytes:
         logger.error("Audio bytes are empty.")
@@ -207,7 +215,7 @@ def llm_generate_audio_to_text(audio_bytes: bytes, artwork_json: dict) -> str:
                     data=audio_bytes,
                 ),
                 types.Part.from_text(
-                    text=f"Given the information about the artwork: {json.dumps(artwork_json)}, reply to the user's query from the audio. Keep the reply informative, strictly based on the surrounding artwork data."
+                    text=f"Given the information about the artwork: {json.dumps(artwork_json)} and previous user interaction/question answer to you {message_context}, use these information to reply to the user's query from the audio which contains his/her query. Keep the reply informative and under 10 seconds, strictly based on the surrounding artwork data."
                 ),
             ],
         ),

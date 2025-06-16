@@ -47,11 +47,11 @@ async def on_shutdown():
     close_mongo_connection()
 
 
-@app.get("/", summary="Health Check")
+@app.get("/", dependencies=[Depends(oauth2_scheme)], summary="Health Check")
 async def health_check(
     request: Request,
-    user = Depends(oauth2_scheme)
 ):
+    print(request.state.user['email'])
     """
     Simple health check endpoint to verify the API is running.
     """
