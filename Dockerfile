@@ -9,8 +9,8 @@ RUN apt-get update \
 WORKDIR /app
 
 RUN curl -fsSL "https://storage.googleapis.com/image_art/archive.zip" -o archive.zip \
- && mkdir -p repository/archive \
- && unzip archive.zip -d repository/archive \
+ && mkdir -p /app/repository \
+ && unzip archive.zip -d /app/repository \
  && rm archive.zip
 
 # 2) Install Python deps
