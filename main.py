@@ -21,6 +21,7 @@ app.include_router(router)
 
 @app.on_event("startup")
 async def on_startup():
+
     """Application startup event: connect to DB and ensure indexes."""
     print("Application starting up...")
     try:

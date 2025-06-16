@@ -1,5 +1,8 @@
+from fastapi import requests
 from pymongo.database import Database
 from pymongo import TEXT 
+from PIL import Image
+from io import BytesIO
 
 def parse_result(cursor):
     results = []
@@ -26,3 +29,11 @@ def ensure_text_index(db: Database):
         print("Text index on 'artworks' collection ensured.")
     except Exception as e:
         print(f"Error creating text index: {e}")
+
+
+
+def download_image(url):
+    """Download an image synchronously from URL"""
+    resp = requests.get(url)
+    img = Image.open(BytesIO(resp.content)).convert("RGB")
+    return img

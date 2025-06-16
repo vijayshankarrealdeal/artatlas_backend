@@ -4,8 +4,10 @@ from google.genai import types
 import requests
 import io
 import json
-import os
+import numpy as np
 from dotenv import load_dotenv
+import torch
+from transformers import CLIPModel, CLIPProcessor
 from engine.models.artworks_model import (
     ArtworkData,
     AudioQuery,
@@ -13,6 +15,9 @@ from engine.models.artworks_model import (
 )  # Assuming these are defined elsewhere
 from google.genai.types import HttpOptions, Part
 import logging
+
+from engine.utils import download_image
+
 
 # Configure logging
 # Basic configuration logs to console. You can customize it to log to a file, rotate logs, etc.
@@ -27,6 +32,10 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 load_dotenv()
+device = "cuda" if torch.cuda.is_available() else "cpu"
+MODEL = CLIPModel.from_pretrained("openai/clip-vit-base-patch32").to(device)
+PROCESSOR = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
+
 
 
 def llm_generate_artwork_metadata(payload: LLMInputPayload) -> ArtworkData:
@@ -234,3 +243,53 @@ def llm_generate_audio_to_text(audio_bytes: bytes, artwork_json: dict) -> str:
         logger.error(f"Error calling Gemini API for audio-to-text. Error: {e}")
         logger.exception("Gemini API call exception details (audio):")
         raise
+
+
+def search_similar(
+    query,
+    collection,
+    top_k=5,
+):
+
+    """
+    Search for images similar to the query using the $search stage with knnBeta.
+    - If query starts with 'http', download & embed on the fly.
+    - Else treat query as stored image ID and fetch embedding.
+    Returns a list of (image_id, score) tuples.
+    """
+    # # Create query embedding
+    if isinstance(query, str) and query.startswith("http"):
+        img = download_image(query)
+        inputs = PROCESSOR(images=img, return_tensors="pt").to(device)
+        with torch.no_grad():
+            emb = MODEL.get_image_features(**inputs)
+        query_emb = emb.cpu().numpy()[0]
+        # Normalization is often done before storing, but good to ensure here too
+        query_emb = query_emb / np.linalg.norm(query_emb)
+    else:
+        doc = collection.find_one({"_id": query})
+        if not doc:
+            raise ValueError(f"No embedding found for ID '{query}'")
+        query_emb = np.array(doc["embedding"])
+
+    pipeline = [
+        {
+            "$vectorSearch": {
+                "index": "vector_index",
+                "path": "embedding",
+                "queryVector": query_emb.tolist(),
+                "numCandidates": top_k * 10,
+                "limit": top_k,
+            }
+        },
+        {
+            "$project": {
+                "_id": 1,
+                "plot": 1,
+                "title": 1,
+                "score": {"$meta": "vectorSearchScore"},
+            }
+        },
+    ]
+    result = collection.aggregate(pipeline)
+    return [i["_id"] for i in result]

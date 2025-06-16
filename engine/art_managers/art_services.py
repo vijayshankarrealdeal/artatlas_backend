@@ -1,8 +1,8 @@
-from typing import List, Optional
+from typing import List, Optional, Union
 from bson import ObjectId
 from fastapi import HTTPException
 from pymongo.database import Database
-from engine.llm.g_llm import llm_generate_artwork_metadata
+from engine.llm.llm_workers import llm_generate_artwork_metadata
 from engine.models.artworks_model import ArtworkData, LLMInputPayload
 from engine.models.gallery_model import GalleryData
 
@@ -185,3 +185,23 @@ class ArtManagerService:
 
         return results
 
+    async def fetch_artworks_by_ids(ids: Union[str, List[str]], db: Database) -> List[ArtworkData]:
+        if isinstance(ids, str):
+            id_list = [ids]
+        else:
+            id_list = ids
+        if not id_list:
+            return []
+
+        # 2. Convert string IDs to MongoDB ObjectId, raising an error on failure
+        try:
+            object_ids = [ObjectId(id_str) for id_str in id_list]
+        except Exception as e:
+            raise ValueError(f"One or more IDs are invalid: {e}")
+
+        # 3. Build the efficient '$in' query
+        query = {"_id": {"$in": object_ids}}
+        cursor = db['artworks'].find(query)
+        results = cursor.to_list(length=len(object_ids))
+        results = [ArtworkData(**doc) for doc in results]
+        return results

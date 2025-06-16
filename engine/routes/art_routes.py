@@ -16,10 +16,10 @@ from pymongo.database import Database
 from engine.art_managers.art_services import ArtManagerService
 from engine.data.db import get_db
 from engine.llm.audio_generate import text_to_wav
-from engine.llm.g_llm import llm_generate_artwork_metadata, llm_generate_audio_to_text
+from engine.llm.llm_workers import llm_generate_audio_to_text, search_similar
 from engine.models.artworks_model import ArtworkData
 from engine.models.gallery_model import GalleryData
-from engine.models.artworks_model import LLMInputPayload, ArtworkData
+from engine.models.artworks_model import ArtworkData
 from engine.fb.firebase import oauth2_scheme
 
 art_router = APIRouter(tags=["art"])
@@ -130,4 +130,29 @@ async def ask_ai(
         return Response(content=response_bytes, media_type="application/octet-stream")
     except Exception as e:
         print(f"Error in ask_ai: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
+
+
+@art_router.get(
+    '/get_similar_artworks',
+    response_model=List[ArtworkData],
+   # dependencies=[Depends(oauth2_scheme)],
+)
+async def get_similar_artworks(
+    request: Request,
+    artwork_id: str = Query(..., description="ID of the artwork to find similar artworks"),
+    db: Database = Depends(get_db),
+    limit: int = Query(10, gt=0, le=100, description="Number of similar artworks to return"),
+):
+    """
+    Get artworks similar to the specified artwork ID.
+    """
+    try:
+        if not ObjectId.is_valid(artwork_id):
+            raise HTTPException(status_code=400, detail="Invalid artwork ID format")
+        collections = db["art_embeddings"]
+        similar_ids =  search_similar(query=artwork_id, collection=collections, top_k=limit)
+        return await ArtManagerService.fetch_artworks_by_ids(similar_ids, db=db)
+    except Exception as e:
+        print(f"Error in get_similar_artworks: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
