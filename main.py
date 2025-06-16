@@ -1,11 +1,12 @@
 # hack_back/main.py
-
-from fastapi import FastAPI
+import firebase_admin
+from firebase_admin import credentials
+from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from engine.utils import ensure_text_index
 from engine.routes.api_routes import router
 from engine.data.db import get_db, connect_to_mongo, close_mongo_connection
-
+from engine.fb.firebase import oauth2_scheme
 
 app = FastAPI(title="ArtAtlas API", version="1.0.0")
 app.add_middleware(
@@ -23,6 +24,8 @@ async def on_startup():
     """Application startup event: connect to DB and ensure indexes."""
     print("Application starting up...")
     try:
+        cred = credentials.Certificate("serviceAccountKey.json") # Make sure the path is correct
+        firebase_admin.initialize_app(cred)
         connect_to_mongo()
         db = get_db()
         ensure_text_index(db)
@@ -39,7 +42,10 @@ async def on_shutdown():
 
 
 @app.get("/", summary="Health Check")
-async def health_check():
+async def health_check(
+    request: Request,
+    user = Depends(oauth2_scheme)
+):
     """
     Simple health check endpoint to verify the API is running.
     """

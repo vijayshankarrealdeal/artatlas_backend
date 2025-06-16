@@ -135,3 +135,53 @@ class ArtManagerService:
 
         # If details were already present, return the document parsed as ArtworkData
         return ArtworkData(**artwork_doc)
+
+    async def get_artworks_by_gallery_id(
+        gallery_id: str,
+        db: Database,
+        limit: int = 15,
+        skip: int = 0,
+    ):
+        """
+        Retrieves artworks linked to a specific gallery.
+        The link is established via a shared 'artworks_id' field present in both
+        the gallery document and the associated artwork documents.
+        """
+        if not ObjectId.is_valid(gallery_id):
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid gallery ID format. Must be a 24-character hex string.",
+            )
+
+        gallery_object_id = ObjectId(gallery_id)
+        gallery = db["galleries"].find_one({"_id": gallery_object_id})
+
+        if not gallery:
+            raise HTTPException(
+                status_code=404, detail=f"Gallery with ID '{gallery_id}' not found."
+            )
+
+        shared_artworks_id = gallery.get("artworks_id")
+        if not shared_artworks_id:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Gallery '{gallery.get('name', gallery_id)}' does not have an 'artworks_id' to link artworks.",
+            )
+
+        # Fetch artworks that share this 'artworks_id'
+        artwork_cursor = (
+            db["artworks"]
+            .find({"artworks_id": shared_artworks_id})
+            .skip(skip)
+            .limit(limit)
+        )
+        docs = list(artwork_cursor)  # Materialize for sync pymongo
+        results = [ArtworkData(**doc) for doc in docs]
+
+        if not results:
+            print(
+                f"No artworks found with artworks_id '{shared_artworks_id}' for gallery '{gallery_id}'."
+            )
+
+        return results
+

@@ -1,4 +1,13 @@
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Response, UploadFile
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    Query,
+    Response,
+    UploadFile,
+)
 from typing import Annotated, List, Optional
 from bson import ObjectId
 from pydantic import TypeAdapter
@@ -58,7 +67,8 @@ async def galleries(
 )  # Updated summary
 async def get_picture_details(
     id: Optional[str] = Query(
-        None, description="ID of the artwork to retrieve. If not provided, a random artwork is returned."
+        None,
+        description="ID of the artwork to retrieve. If not provided, a random artwork is returned.",
     ),
     db: Database = Depends(get_db),
 ):
@@ -76,61 +86,26 @@ async def get_artworks_by_gallery_id(  # Changed to async, renamed for clarity
     limit: int = Query(15, gt=0, le=100, description="Number of artworks to return"),
     skip: int = Query(0, ge=0, description="Number of artworks to skip for pagination"),
 ) -> List[ArtworkData]:
-    """
-    Retrieves artworks linked to a specific gallery.
-    The link is established via a shared 'artworks_id' field present in both
-    the gallery document and the associated artwork documents.
-    """
-    if not ObjectId.is_valid(gallery_id):
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid gallery ID format. Must be a 24-character hex string.",
-        )
-
-    gallery_object_id = ObjectId(gallery_id)
-    gallery = db["galleries"].find_one({"_id": gallery_object_id})
-
-    if not gallery:
-        raise HTTPException(
-            status_code=404, detail=f"Gallery with ID '{gallery_id}' not found."
-        )
-
-    shared_artworks_id = gallery.get("artworks_id")
-    if not shared_artworks_id:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Gallery '{gallery.get('name', gallery_id)}' does not have an 'artworks_id' to link artworks.",
-        )
-
-    # Fetch artworks that share this 'artworks_id'
-    artwork_cursor = (
-        db["artworks"].find({"artworks_id": shared_artworks_id}).skip(skip).limit(limit)
+    return await ArtManagerService.get_artworks_by_gallery_id(
+        gallery_id=gallery_id, db=db, limit=limit, skip=skip
     )
-    docs = list(artwork_cursor)  # Materialize for sync pymongo
-    results = [ArtworkData(**doc) for doc in docs]
-
-    if not results:
-        print(
-            f"No artworks found with artworks_id '{shared_artworks_id}' for gallery '{gallery_id}'."
-        )
-
-    return results
 
 
 @art_router.post("/askai")
 async def ask_ai(
     artwork_data: Annotated[str, Form(...)],
     audio_file: Annotated[UploadFile, File(...)],
-    db: Database = Depends(get_db)
+    db: Database = Depends(get_db),
 ):
     try:
-        # 
+        #
         adapter = TypeAdapter(ArtworkData)
         artwork_data: ArtworkData = adapter.validate_json(artwork_data)
         audio_bytes = await audio_file.read()
-        artwork_data = await ArtManagerService.get_picture_of_the_day(artwork_data.model_dump()['id'], db=db)
+        artwork_data = await ArtManagerService.get_picture_of_the_day(
+            artwork_data.model_dump()["id"], db=db
+        )
         llm_text = llm_generate_audio_to_text(audio_bytes, artwork_data.model_dump())
-        print(llm_text)
         response_bytes = text_to_wav(llm_text)
         return Response(content=response_bytes, media_type="application/octet-stream")
     except Exception as e:
