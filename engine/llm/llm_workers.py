@@ -225,7 +225,7 @@ def llm_generate_audio_to_text(audio_bytes: bytes, artwork_json: dict, conversat
         response_schema=AudioQuery,  # Schema for the JSON output
         system_instruction=[
             types.Part.from_text(
-                text="You are an AI assistant. Transcribe the audio query and then answer it. Your answer must be based *only* around the artwork and information provided in the user's message context you can search you knowledge for any information regarding to it. If the query is unrelated to the artwork, state that you cannot answer. The response should be in JSON format matching the AudioQuery schema, with a 'response' field containing your textual answer."
+                text="You are an AI assistant. Transcribe the audio query and then answer it. Your answer must be based *only* around the artwork and information provided in the user's message context you can search you knowledge for any information regarding to it. If the query is unrelated to the artwork, state that you cannot answer. The response should be in JSON format matching the AudioQuery schema, with a 'response' field containing your textual answer, and `audio_text` with user input query in audio."
             ),
         ],
     )
