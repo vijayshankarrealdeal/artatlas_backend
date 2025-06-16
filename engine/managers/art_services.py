@@ -76,76 +76,60 @@ class ArtManagerService:
             user: UserApp = UserManager.check_user(
                 db=db, user_id=user_uid, email=user_email
             )
+            today = date.today()
             current_date = date.today()
-            try:
-                last_date_str = date.fromisoformat(user.last_random_art_date)
-            except (TypeError, ValueError):
-                last_date_str = current_date - timedelta(days=1)
+            if isinstance(user.last_random_art_date, str):
+                last_date = date.fromisoformat(user.last_random_art_date)
+            else:
+                last_date = user.last_random_art_date or (today - timedelta(days=1))
 
-            if last_date_str < current_date:
+            if last_date < current_date:
                 db["users"].update_one(
                     {"_id": user_uid},
                     {
                         "$set": {
                             "daily_random_art_count_img": 0,
-                            "last_random_art_date": current_date.isoformat(),
+                            "last_random_art_date": today.isoformat(),
+                            "daily_random_art_ids": [],
                         }
                     },
                 )
                 user.daily_random_art_count_img = 0
+                user.daily_random_art_ids = []
+
             if user.daily_random_art_count_img < RANDOM_ART_DAILY_LIMIT:
-                print(
-                    f"User {user_uid} has random picks left. Fetching from 'artworks'."
-                )
-                pipeline = [{"$sample": {"size": 1}}]
-                random_artworks = list(db["artworks"].aggregate(pipeline))
-                if not random_artworks:
-                    raise HTTPException(
-                        status_code=404, detail="No artworks available to choose from."
-                    )
+                doc = list(db["artworks"].aggregate([{"$sample": {"size": 1}}]))
+                if not doc:
+                    raise HTTPException(404, "No artworks available.")
+                artwork = doc[0]
 
-                artwork_doc = random_artworks[0]
                 db["users"].update_one(
-                    {"_id": user_uid}, {"$inc": {"daily_random_art_count_img": 1}}
+                    {"_id": user_uid},
+                    {
+                        "$inc": {"daily_random_art_count_img": 1},
+                        "$push": {"daily_random_art_ids": artwork["_id"]},
+                    },
                 )
+                artwork_doc = artwork
             else:
-                print(
-                    f"User {user_uid} limit reached. Fetching from 'daily_art_for_user'."
-                )
+                daily = list(db["daily_art_for_user"].find().sort("display_order", 1))
+                if not daily:
+                    raise HTTPException(404, "Daily artworks not configured yet.")
+                return ArtworkData(**daily[0])
 
-                daily_art_cursor = (
-                    db["daily_art_for_user"].find({}).sort("display_order", 1)
-                )  # Optional sort
-                daily_artworks = [ArtworkData(**doc) for doc in daily_art_cursor]
-
-                if not daily_artworks:
-                    raise HTTPException(
-                        status_code=404,
-                        detail="Daily artworks are not configured yet. Please check back later.",
-                    )
-                return daily_artworks[0]
-        if not artwork_doc:
-            detail_msg = (
-                f"Artwork with ID '{id}' not found." if id else "No artworks found."
-            )
-            raise HTTPException(status_code=404, detail=detail_msg)
-
-        # Check if essential LLM-generated field 'details_in_image' is missing
         if not artwork_doc.get("details_in_image"):
             print(
                 f"Details missing for artwork {artwork_doc['_id']}. Generating with LLM..."
             )
-
-            # Ensure payload passed to LLMInputPayload is a dictionary copy
-            llm_input = LLMInputPayload(payload=dict(artwork_doc))
-
+            payload = dict(artwork_doc)
+            payload.pop("_id", None) 
+            llm_input = LLMInputPayload(payload=payload)
             try:
                 res_artwork_data = llm_generate_artwork_metadata(llm_input)
-                # print(f"LLM generated data for artwork {artwork_doc['_id']}: {res_artwork_data.model_dump_json(indent=2)}") # For debugging
             except RuntimeError as e:
                 print(f"LLM generation failed for {artwork_doc['_id']}: {e}")
-                return ArtworkData(**artwork_doc)  # Return original if LLM fails
-            except Exception as e:  # Catch any other unexpected errors
+                return ArtworkData(**artwork_doc) 
+            except Exception as e:  
                 print(
                     f"Unexpected error during LLM enrichment for {artwork_doc['_id']}: {e}"
                 )
@@ -156,18 +140,16 @@ class ArtManagerService:
             res_artwork_data = ArtworkData(**res_artwork_data)
             update_payload_for_db = res_artwork_data.model_dump(
                 exclude_none=True,
-                by_alias=True,  # This will produce keys like '_id', 'artwork_title'
+                by_alias=True, 
             )
-
-            # Explicitly remove '_id' from the dictionary to be used in $set
             if "_id" in update_payload_for_db:
                 del update_payload_for_db["_id"]
 
-            if update_payload_for_db:  # Only update if there are fields to set
+            if update_payload_for_db: 
                 result = db["artworks"].update_one(
                     {
                         "_id": artwork_doc["_id"]
-                    },  # Query by the original ObjectId (artwork_doc['_id'] is already ObjectId)
+                    },
                     {"$set": update_payload_for_db},
                 )
                 if result.modified_count > 0:

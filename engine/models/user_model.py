@@ -40,7 +40,7 @@ class UserApp(BaseModel):
     daily_random_art_count_img: int = Field(default=0, description="Count of random artworks viewed today.")
     last_interaction_date: Optional[date] = Field(default=None)
     last_random_art_date: Optional[date] = Field(default=None, description="Date of the last random artwork viewed.")
-
+    daily_random_art_ids: List[str] = Field(default_factory=list)
     
     @field_validator("id", mode="before")
     @classmethod
