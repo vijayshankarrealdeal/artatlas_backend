@@ -12,7 +12,7 @@ def connect_to_mongo():
     """Initializes the MongoDB client and database instance."""
     global _mongo_client, _db
     if _mongo_client is None: # Ensure client is initialized only once
-        mongo_uri = os.getenv("MONGO_URI", "mongodb://34.132.198.106:27017")
+        mongo_uri = os.getenv("MONGO_URI", "mongodb+srv://art:art@cluster0.0omzb4g.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
         print(f"Connecting to MongoDB at {mongo_uri}...")
         _mongo_client = MongoClient(mongo_uri)
         _db = _mongo_client["artatlas"] # Replace "artatlas" with your actual DB name if different
